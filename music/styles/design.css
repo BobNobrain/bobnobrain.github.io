@@ -1,0 +1,25 @@
+@charset "utf-8";
+
+body { font-family: Tahoma, Geneva, sans-serif; }
+
+#cpanel {
+	border-right: 2px solid #00AF64;
+	background: #eee;
+}
+
+#username {
+	font-weight: bold;
+}
+#who-is-this {
+	font-size: 12px;
+	color: #777;
+	font-style: italic;
+}
+
+
+#friends li {
+	cursor: pointer;
+}
+#friends li:hover {
+	background: #bbb;
+}

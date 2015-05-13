@@ -1,0 +1,59 @@
+@charset "utf-8";
+
+html, body { width: 100%; height: 100%; margin: 0px; padding: 0px; }
+
+table, tr, td { border: 0px none; border-spacing: 0px; border-collapse: collapse; vertical-align: top; }
+
+#wrapper {
+	width: 100%; height: 100%;
+	margin: 0px; padding: 0px;
+}
+
+/* =============== [ CPANEL ] =================================== */
+
+#cpanel {
+	width: 220px;
+	overflow: hidden;
+	padding: 0px;
+}
+
+#user-info {
+	width: 100%; height: 50px;
+	margin: 0px;
+	padding: 2px 0px 2px 2px;
+	display: table;
+}
+
+#cpanel .avatar {
+	float: left;
+	margin-left: 5px;
+}
+
+#user-info .avatar {
+	margin: 5px;
+}
+
+#cpanel .label {
+	margin: auto 0px;
+	display: table-cell;
+	width: 160px;
+	vertical-align: middle;
+}
+
+/* =============== [ FRIENDS ] ================================== */
+
+#friends {
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+}
+
+#friends li {
+	display: table;
+	width: 100%;
+	height: 52px;
+}
+
+#friends li .avatar {
+	margin: 1px 5px;
+}
