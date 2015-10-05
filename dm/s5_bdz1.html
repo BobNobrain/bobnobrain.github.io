@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>БДЗ по дискре #5 №1</title>
+<link rel='stylesheet' href="style.css" />
+<script src="actions.js"></script>
+</head>
+<body>
+<section>
+	<h2>Получение регулярки</h2>
+	<div id='reg_formula'>
+		<span class='big-brackets'>
+			a<sup>f(n<sub>0</sub>)</sup>
+			g(n<sub>1</sub>)
+			b<sup>f(n<sub>2</sub>)</sup>
+		</span>
+		<sup>f(<span class='strike-over'>n<sub>2</sub></span>)</sup>
+		g<span class='big-brackets'>
+			<span class='strike-over'>n<sub>1</sub></span>
+			&#8744;
+			n<sub>0</sub>
+		</span>
+		<span class='big-brackets'>
+			a
+			b<sup>f(n<sub>3</sub>)</sup>
+		</span>
+		<sup>f(n<sub>4</sub>)</sup>
+		g(n<sub>5</sub>)
+		<span class='big-brackets'>
+			b
+			g(n<sub>6</sub>)
+			a<sup>f(n<sub>7</sub>)</sup>
+		</span>
+		<sup>f(<span class='strike-over'>n<sub>7</sub></span>)</sup>
+		g(<span class='strike-over'>n<sub>5</sub></span>)
+		b
+	</div>
+	<div class='input-group'>
+		Группа:
+		<select id='group'>
+			<option value='0'>221 (+0)</option>
+			<option value='30'>222 (+30)</option>
+			<option value='60'>223 (+60)</option>
+			<option value='120'>682 (+120)</option>
+		</select>,
+		номер в списке:
+		<input type='number' id='std_number' value='1' min='1' max='40' />
+		<div id='regexpr_output' class='output formula'></div>
+		<button type='button' class='right' id='sec1_calc_btn'>Просчитать</button>
+	</div>
+</section>
+<section>
+	<h2>Построение графа</h2>
+	<div class='input-group'>
+		<input type='text' id='reg_expr' style='width: 100%; display: inline-block; box-sizing: border-box;' />
+		<button type='button' id='sec2_calc_btn' class='right'>Построить</button>
+		<hr />
+		Высота холста:
+		<input type='number' value='500' id='graph_height' />
+		<button type='button' id='resize_graph'>Применить</button>
+	</div>
+	<canvas id='graph' width='800' height='500'></canvas>
+</section>
+</body>
+</html>

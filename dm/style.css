@@ -1,0 +1,64 @@
+@charset "utf-8";
+
+* {
+	font-family: Tahoma, Geneva, sans-serif;
+}
+
+sup sub { font-size: x-small; }
+.strike-over { text-decoration: overline; }
+.big-brackets::before {
+	content: '(';
+	font-size: 32px;
+}
+.big-brackets::after {
+	content: ')';
+	font-size: 32px;
+}
+
+#reg_formula {
+	font-size: 24px;
+	font-family: Consolas, monospace;
+	cursor: default;
+}
+#reg_formula * { font-family: Consolas, monospace; }
+
+#reg_formula *:hover { background: rgba(180, 224, 255, 0.6); }
+
+section > div {
+	width: calc(100% - 20px);
+	margin: 10px;
+}
+
+button { cursor: pointer; }
+button.right { margin-right: 0px; margin-left: auto; display: block; }
+input { margin-right: 10px; display: inline-block; }
+input[type='number'] { width: 50px; text-align: right; }
+
+.input-group {
+	margin-left: 50px;
+	width: 600px;
+	border: 1px dashed #333;
+	background: #f7f7f7;
+	padding: 10px 20px;
+}
+
+.output {
+	min-height: 1em;
+	width: calc(100% - 4px - 5px);
+	background: #000;
+	color: #fff;
+	border: 1px solid #fff;
+	font-family: Consolas, monospace;
+	
+	padding: 2px; margin: 5px;
+}
+.output.formula {
+	font-size: 20px;
+	min-height: 1.5em;
+}
+
+canvas {
+	margin: 10px;
+	
+	border: 5px solid #999;
+}
