@@ -13,7 +13,12 @@ createOutput=function(out)
 		element: out
 	}
 }
-createContext=function(id) { return byId(id).getContext('2d'); }
+createContext=function(id)
+{
+	var canvas=byId(id);
+	canvas.width=canvas.width;
+	return canvas.getContext('2d');
+}
 
 /*
 	** Formatting functions for formulas
@@ -22,6 +27,238 @@ function sup(text){ return '<sup>'+text+'</sup>'; } // upper index
 function sub(text){ return '<sub>'+text+'</sub>'; } // lower index
 function neg(text){ return '<span class="strike-over">'+text+'</span>'; } // negation sign
 function brackets(text){ return '<span class="big-brackets">'+text+'</span>'; } // group in big brackets
+
+/*
+	** Some classes for graph building
+*/
+
+function Vertex(name, x, y)
+{
+	this.name=name;
+	this.x=x; this.y=y;
+	this.width=VERTEX_WIDTH; this.height=VERTEX_HEIGHT;
+	
+	this.neighbours=[];
+	this.addNeighbour=function(char, vertex)
+	{
+		this.neighbours.push({ char: char, vertex: vertex });
+	}
+	
+	this.paint=function(ctx)
+	{
+		ctx.moveTo(this.x+this.width/2, this.y+this.height/2);
+		
+		for(var i in this.neighbours)
+		{
+			var nx=this.neighbours[i].vertex.x+this.neighbours[i].vertex.width/2;
+			var ny=this.neighbours[i].vertex.y+this.neighbours[i].vertex.height/2
+			ctx.lineTo(nx, ny);
+			
+			ctx.fillText(this.neighbours[i].char==null?'λ':this.neighbours[i].char, (this.x+nx)/2, (this.y+ny)/2);
+		}
+		
+		ctx.stroke();
+		
+		ctx.fillText(this.name, this.x, this.y);
+	}
+}
+
+VERTEX_WIDTH=12; VERTEX_HEIGHT=26;
+EDGE_LENGTH=60;
+
+function Structure(start, end)
+{
+	this.start=start; this.end=end;
+	var x=0, y=0;
+	
+	this.width=this.height=0;
+	
+	var inners=[];
+	
+	Object.defineProperty(this, 'x', {
+		get: function() { return x; },
+		set: function(value)
+		{
+			var d=value-x;
+			x=value;
+			for(var i in inners)
+			{
+				inners[i].x+=d;
+			}
+		}
+	});
+	Object.defineProperty(this, 'y', {
+		get: function() { return y; },
+		set: function(value)
+		{
+			var d=value-y;
+			y=value;
+			for(var i in inners)
+			{
+				inners[i].y+=d;
+			}
+		}
+	});
+	
+	this.addChild=function(child)
+	{
+		inners.push(child);
+	}
+	this.addChildren=function(children)
+	{
+		for(var x in children) { inners.push(children[x]); }
+	}
+	
+	this.paint=function(ctx)
+	{
+		ctx.strokeRect(x, y, this.width, this.height);
+		
+		for(var x in inners)
+		{
+			inners[x].paint(ctx);
+		}
+	}
+}
+
+function createSimpleLiteral(from, to, transitChar, x, y)
+{
+	var s=new Structure(from, to);
+	from.x=x; from.y=y;
+	to.x=x+EDGE_LENGTH+VERTEX_WIDTH; to.y=y;
+	from.addNeighbour(transitChar, to);
+	
+	s.addChild(from); s.addChild(to);
+	
+	s.x=x; s.y=y;
+	s.width=EDGE_LENGTH+VERTEX_WIDTH*2;
+	s.height=VERTEX_HEIGHT;
+	return s;
+}
+
+function createCycle(head, innerStructure, x, y)
+{
+	innerStructure.x=x;
+	innerStructure.y=y+innerStructure.width/2;
+	
+	head.x=x+innerStructure.width/2
+	head.y=y;
+	
+	var s=new Structure(head, head);
+	
+	s.addChild(head);
+	s.addChild(innerStructure);
+	
+	head.addNeighbour(null, innerStructure.start);
+	innerStructure.end.addNeighbour(null, head);
+	
+	s.width=innerStructure.width;
+	s.height=innerStructure.height+innerStructure.width/2;
+	return s;
+}
+
+// returns the least x coordinate of all available within the 'structures'
+function getLeftRim(structures)
+{
+	var left=null;
+	for(var x in structures)
+	{
+		if(left==null || structures[x].x<left) left=structures[x].x;
+	}
+	return left;
+}
+// returns the least y coordinate of all available within the 'structures'
+function getTopRim(structures)
+{
+	var top=null;
+	for(var x in structures)
+	{
+		if(top==null || structures[x].y<top) top=structures[x].y;
+	}
+	return top;
+}
+// returns the largest x coordinate of all available within the 'structures'
+function getRightRim(structures)
+{
+	var right=null;
+	for(var x in structures)
+	{
+		if(right==null || structures[x].x>right) right=structures[x].x;
+	}
+	return right;
+}
+// returns the largest y coordinate of all available within the 'structures'
+function getBottomRim(structures)
+{
+	var bottom=null;
+	for(var x in structures)
+	{
+		if(bottom==null || structures[x].y>bottom) bottom=structures[x].y;
+	}
+	return bottom;
+}
+
+
+function createConcatenation(innerStructures, before, after, x, y)
+{
+	var s=new Structure(before, after);
+	s.x=x; s.y=y;
+	
+	before.x=x; before.y=y;
+	
+	var penx=x+EDGE_LENGTH;
+	
+	before.addNeighbour(null, innerStructures[0].start);
+	innerStructures[0].x=penx; innerStructures[0].y=y;
+	penx+=innerStructures[0].width+EDGE_LENGTH;
+	for(var i=1; i<innerStructures.length; i++)
+	{
+		innerStructures[i-1].end.addNeighbour(null, innerStructures[i].start);
+		
+		innerStructures[i].x=penx; innerStructures[i].y=y;
+		penx+=innerStructures[i].width+EDGE_LENGTH;
+	}
+	innerStructures[innerStructures.length-1].end.addNeighbour(null, after);
+	
+	after.x=penx;
+	after.y=y;
+	
+	s.addChild(before); s.addChild(after);
+	s.addChildren(innerStructures);
+	
+	return s;
+}
+
+function createParallels(innerStructures, before, after, x, y)
+{
+	var s=new Structure(before, after);
+	s.x=x; s.y=y;
+	
+	before.x=x; before.y=y;
+	
+	var penx=x+EDGE_LENGTH;
+	var peny=y;
+	var maxw=0;
+	
+	for(var i=0; i<innerStructures.length; i++)
+	{
+		before.addNeighbour(null, innerStructures[i].start);
+		innerStructures[i].end.addNeighbour(null, after);
+		
+		innerStructures[i].x=penx;
+		innerStructures[i].y=peny;
+		if(innerStructures[i].width>maxw) maxw=innerStructures[i].width;
+		
+		peny+=innerStructures[i].height+EDGE_LENGTH;
+	}
+	
+	after.x=x+2*EDGE_LENGTH+maxw;
+	after.y=y;
+	
+	s.addChild(before); s.addChild(after);
+	s.addChildren(innerStructures);
+	
+	return s;
+}
 
 /*
 	** Document onLoad callback
@@ -137,7 +374,7 @@ window.onload=function()
 			if(result.operator==null)
 			{
 				// literal found, stop recursion
-				result.operands=expr;
+				result.operands=[expr];
 				return result;
 			}
 			
@@ -189,19 +426,60 @@ window.onload=function()
 		var g=createContext('graph');
 		var penx, peny;
 		
-		g.fillStyle='#ff0000';
+		g.fillStyle='#000';
 		g.textBaseline='top';
 		g.font='16px Consolas, sans-serif';
-		g.fillText('Мне лень', 10, 10);
+		g.strokeStyle='#f00';
+		//g.fillText('Мне лень', 10, 10);
 		
-		var drawNode=function(node)
+		var _cl=0;
+		function genLetter()
 		{
-			switch(node.operator)
+			return 'ABCDEFGHIJKLMNOPQRSTUVWXYZБГДЖЗИЛПУФЦЧШЪЫЭЮЯ'[_cl++];
+		}
+		
+		var start=new Vertex('^', 10, 10); var end=new Vertex('$', 0, 0);
+		var buildNode=function(model, x, y, start, end)
+		{
+			console.log(model);
+			switch(model.operator)
 			{
 				case null:
-					// just single node
-				break;
+				
+				return createSimpleLiteral(start, end, model.operands[0], x, y);
+				
+				case '*':
+					var inners=[];
+					for(var i in model.operands)
+					{
+						inners.push(buildNode(model.operands[i],
+						x, y,
+						new Vertex(genLetter(), x, y), new Vertex(genLetter(), x, y)));
+					}
+					var head=new Vertex(genLetter(), 0, 0);
+					start.addNeighbour(null, head);
+					head.addNeighbour(null, inners[0].start);
+					inners[0].end.addNeighbour(null, head);
+					head.addNeighbour(null, end);
+					var cycle=createCycle(head, inners[0], x, y);
+					var result=new Structure(start, end);
+					result.addChildren([start, end, cycle]);
+					result.x=x; result.y=y;
+				return result;
+				
+				case '.':
+					var inners=[];
+					for(var i in model.operands)
+					{
+						inners.push(buildNode(model.operands[i],
+						x, y,
+						new Vertex(genLetter(), x, y), new Vertex(genLetter(), x, y)));
+					}
+				return createConcatenation(inners, start, end, x, y);
 			}
 		}
+		
+		var struct=buildNode(model, 10, 10, start, end);
+		struct.paint(g);
 	}
 }
