@@ -56,11 +56,17 @@
 		<input type='text' id='reg_expr' style='width: 100%; display: inline-block; box-sizing: border-box;' />
 		<button type='button' id='sec2_calc_btn' class='right'>Построить</button>
 		<hr />
-		Высота холста:
-		<input type='number' value='500' id='graph_height' />
-		<button type='button' id='resize_graph'>Применить</button>
+		Размеры холста:
+		<input type='number' value='800' id='graph_width' />пикселей вширь, 
+		<input type='number' value='500' id='graph_height' />пикселей в высоту
+		
+		<button type='button' id='resize_graph' class='right'>Применить</button>
 	</div>
 	<canvas id='graph' width='800' height='500'></canvas>
+	<div>
+		Предупреждение: граф содержит много пустых переходов, поскольку китаец, сидящий у меня в подвале и рисующий
+		этот граф, не знаком с ДМ в принципе и просто следует заданному алгоритму.
+	</div>
 </section>
 </body>
 </html>

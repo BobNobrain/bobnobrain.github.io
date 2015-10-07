@@ -46,25 +46,72 @@ function Vertex(name, x, y)
 	
 	this.paint=function(ctx)
 	{
-		ctx.moveTo(this.x+this.width/2, this.y+this.height/2);
+		//ctx.moveTo(this.x+this.width/2, this.y+this.height/2);
 		
+		ctx.strokeStyle='#000';
+		ctx.fillStyle='#000';
+		ctx.lineWidth=2;
 		for(var i in this.neighbours)
 		{
+			var edge=new Path2D();
+			edge.moveTo(this.x+this.width/2, this.y+this.height/2);
 			var nx=this.neighbours[i].vertex.x+this.neighbours[i].vertex.width/2;
 			var ny=this.neighbours[i].vertex.y+this.neighbours[i].vertex.height/2
-			ctx.lineTo(nx, ny);
+			edge.lineTo(nx, ny);
+			ctx.stroke(edge);
 			
-			ctx.fillText(this.neighbours[i].char==null?'λ':this.neighbours[i].char, (this.x+nx)/2, (this.y+ny)/2);
+			// drawing arrow
+			var n = { 	x: nx-(this.x+this.width /2),
+						y: ny-(this.y+this.height/2) };
+			n.l=Math.sqrt(n.x*n.x+n.y*n.y);
+			n.x/=n.l;
+			n.y/=n.l;
+			
+			var p={ x: -n.y, y: n.x };
+			
+			var middle={ 	x: (this.x+this.width/2+nx)/2+n.x*ARROW_SIZE/2,
+							y: (this.y+this.height/2+ny)/2+n.y*ARROW_SIZE/2 };
+			
+			var tr=new Path2D();
+			tr.moveTo(middle.x, middle.y);
+			tr.lineTo(middle.x-ARROW_SIZE*(n.x+p.x), middle.y-ARROW_SIZE*(n.y+p.y));
+			tr.lineTo(middle.x-ARROW_SIZE*(n.x-p.x), middle.y-ARROW_SIZE*(n.y-p.y));
+			ctx.fillStyle='#000';
+			ctx.fill(tr);
+			
+			
+			// drawing text
+			middle.x-=n.x*ARROW_SIZE/2;
+			middle.y-=n.y*ARROW_SIZE/2;
+			
+			ctx.fillStyle='#0CF';
+			ctx.fillText(	this.neighbours[i].char==null?'λ':this.neighbours[i].char,
+							middle.x,
+							middle.y);
 		}
 		
-		ctx.stroke();
+		//ctx.stroke();
 		
-		ctx.fillText(this.name, this.x, this.y);
+		var path=new Path2D();
+		path.arc(this.x+VERTEX_WIDTH/2, this.y+VERTEX_HEIGHT/2, VERTEX_WIDTH, 0, Math.PI*2, false);
+		ctx.fillStyle='#000';
+		ctx.fill(path);
+		
+		//ctx.fillStyle='#fff';
+		//ctx.fillText(this.name, this.x+4, this.y+4);
+	}
+	
+	this.paintNames=function(ctx)
+	{
+		ctx.fillStyle='#fff';
+		ctx.fillText(this.name, this.x+1, this.y+6);
 	}
 }
 
 VERTEX_WIDTH=12; VERTEX_HEIGHT=26;
-EDGE_LENGTH=60;
+EDGE_LENGTH=100;
+FONT_SIZE=16;
+ARROW_SIZE=10;
 
 function Structure(start, end)
 {
@@ -111,11 +158,19 @@ function Structure(start, end)
 	
 	this.paint=function(ctx)
 	{
-		ctx.strokeRect(x, y, this.width, this.height);
+		//ctx.strokeRect(x, y, this.width, this.height);
 		
 		for(var x in inners)
 		{
 			inners[x].paint(ctx);
+		}
+	}
+	
+	this.paintNames=function(ctx)
+	{
+		for(var x in inners)
+		{
+			inners[x].paintNames(ctx);
 		}
 	}
 }
@@ -140,7 +195,7 @@ function createCycle(head, innerStructure, x, y)
 	innerStructure.x=x;
 	innerStructure.y=y+innerStructure.width/2;
 	
-	head.x=x+innerStructure.width/2
+	head.x=x;//+innerStructure.width/2
 	head.y=y;
 	
 	var s=new Structure(head, head);
@@ -206,6 +261,7 @@ function createConcatenation(innerStructures, before, after, x, y)
 	before.x=x; before.y=y;
 	
 	var penx=x+EDGE_LENGTH;
+	var maxh=innerStructures[0].height;
 	
 	before.addNeighbour(null, innerStructures[0].start);
 	innerStructures[0].x=penx; innerStructures[0].y=y;
@@ -216,6 +272,8 @@ function createConcatenation(innerStructures, before, after, x, y)
 		
 		innerStructures[i].x=penx; innerStructures[i].y=y;
 		penx+=innerStructures[i].width+EDGE_LENGTH;
+		
+		if(innerStructures[i].height>maxh) maxh=innerStructures[i].height;
 	}
 	innerStructures[innerStructures.length-1].end.addNeighbour(null, after);
 	
@@ -224,6 +282,9 @@ function createConcatenation(innerStructures, before, after, x, y)
 	
 	s.addChild(before); s.addChild(after);
 	s.addChildren(innerStructures);
+	
+	s.width=penx+VERTEX_WIDTH;
+	s.height=maxh;
 	
 	return s;
 }
@@ -238,6 +299,7 @@ function createParallels(innerStructures, before, after, x, y)
 	var penx=x+EDGE_LENGTH;
 	var peny=y;
 	var maxw=0;
+	var rightEndX=x;
 	
 	for(var i=0; i<innerStructures.length; i++)
 	{
@@ -248,7 +310,15 @@ function createParallels(innerStructures, before, after, x, y)
 		innerStructures[i].y=peny;
 		if(innerStructures[i].width>maxw) maxw=innerStructures[i].width;
 		
+		if(innerStructures[i].end.x>rightEndX) rightEndX=innerStructures[i].end.x;
+		
 		peny+=innerStructures[i].height+EDGE_LENGTH;
+	}
+	
+	for(var i=0; i<innerStructures.length; i++)
+	{
+		// moving right ends of inners as far right as we can
+		innerStructures[i].end.x=rightEndX;
 	}
 	
 	after.x=x+2*EDGE_LENGTH+maxw;
@@ -256,6 +326,8 @@ function createParallels(innerStructures, before, after, x, y)
 	
 	s.addChild(before); s.addChild(after);
 	s.addChildren(innerStructures);
+	
+	s.width=maxw+2*EDGE_LENGTH+VERTEX_WIDTH; s.height=peny;
 	
 	return s;
 }
@@ -423,14 +495,7 @@ window.onload=function()
 		//}
 		//catch(e) { console.log(e); }
 		
-		var g=createContext('graph');
-		var penx, peny;
 		
-		g.fillStyle='#000';
-		g.textBaseline='top';
-		g.font='16px Consolas, sans-serif';
-		g.strokeStyle='#f00';
-		//g.fillText('Мне лень', 10, 10);
 		
 		var _cl=0;
 		function genLetter()
@@ -456,15 +521,27 @@ window.onload=function()
 						x, y,
 						new Vertex(genLetter(), x, y), new Vertex(genLetter(), x, y)));
 					}
-					var head=new Vertex(genLetter(), 0, 0);
+					/*var head=new Vertex(genLetter(), 0, 0);
 					start.addNeighbour(null, head);
-					head.addNeighbour(null, inners[0].start);
-					inners[0].end.addNeighbour(null, head);
+					//head.addNeighbour('his', inners[0].start);
+					//inners[0].end.addNeighbour('ieh', head);
 					head.addNeighbour(null, end);
-					var cycle=createCycle(head, inners[0], x, y);
+					var cycle=createCycle(head, inners[0], x, y);*/
+					
+					start.addNeighbour(null, end);
+					var cycle=createCycle(start, inners[0], x, y);
+					
 					var result=new Structure(start, end);
-					result.addChildren([start, end, cycle]);
 					result.x=x; result.y=y;
+					result.height=cycle.height;
+					result.width=cycle.width;
+					
+					//start.x=x; start.y=y;
+					end.x=x+result.width;
+					end.y=y;
+					
+					// don't add start cause it's inside cycle
+					result.addChildren([end, cycle]);
 				return result;
 				
 				case '.':
@@ -476,10 +553,40 @@ window.onload=function()
 						new Vertex(genLetter(), x, y), new Vertex(genLetter(), x, y)));
 					}
 				return createConcatenation(inners, start, end, x, y);
+				
+				case '+':
+					var inners=[];
+					for(var i in model.operands)
+					{
+						inners.push(buildNode(model.operands[i],
+						x, y,
+						new Vertex(genLetter(), x, y), new Vertex(genLetter(), x, y)));
+					}
+				return createParallels(inners, start, end, x, y);
 			}
 		}
 		
 		var struct=buildNode(model, 10, 10, start, end);
+		
+		byId('graph_width').value=struct.width+40;
+		byId('graph_height').value=struct.height+40;
+		byId('resize_graph').onclick();
+		
+		var g=createContext('graph');
+		var penx, peny;
+		g.fillStyle='#000';
+		g.textBaseline='top';
+		g.font=FONT_SIZE+'px bold Consolas, sans-serif';
+		g.strokeStyle='#f00';
+		
 		struct.paint(g);
+		struct.paintNames(g);
+	}
+	
+	byId('resize_graph').onclick=function()
+	{
+		var canvas=byId('graph');
+		canvas.width=byId('graph_width').value;
+		canvas.height=byId('graph_height').value;
 	}
 }
