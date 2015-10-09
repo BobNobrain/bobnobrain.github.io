@@ -62,4 +62,6 @@ canvas {
 	margin: 10px;
 	
 	border: 5px solid #999;
+	
+	display: block;
 }

@@ -569,11 +569,47 @@ window.onload=function()
 		}
 		var unwrapExpr=function(expr)
 		{
-			while(expr[0]=='(' && expr[expr.length-1]==')')
+			var pairs=[];
+			
+			for(var i=0; i<expr.length; i++)
+			{
+				if(expr[i]=='(')
+				{
+					var level=1;
+					for(var j=i+1; j<expr.length; j++)
+					{
+						if(expr[j]=='(') level++;
+						if(expr[j]==')')
+						{
+							if(level==1)
+							{
+								pairs.push({start:i, end:j});
+								break;
+							}
+							else level--;
+						}
+					}
+				}
+			}
+			
+			var wrappingLevels=0;
+			for(var i=0; i<pairs.length; i++)
+			{
+				if(pairs[i].start+pairs[i].end == expr.length-1)
+				{
+					wrappingLevels++;
+				}
+				else break;
+			}
+			
+			return expr.substring(wrappingLevels, expr.length-wrappingLevels);
+			
+			
+			/*while(expr[0]=='(' && expr[expr.length-1]==')')
 			{
 				expr=expr.substring(1, expr.length-1);
 			}
-			return expr;
+			return expr;*/
 		}
 		var defineOuterOperator=function(expr)
 		{
