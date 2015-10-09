@@ -59,14 +59,23 @@
 		Размеры холста:
 		<input type='number' value='800' id='graph_width' />пикселей вширь, 
 		<input type='number' value='500' id='graph_height' />пикселей в высоту
+		<br />
+		<label><input type="checkbox" id='graph_auto_size' checked='1' />Автоматически</label>
 		
 		<button type='button' id='resize_graph' class='right'>Применить</button>
 	</div>
+	Символ <code>^</code> используется для обозначения начальной вершины, <code>$</code> &mdash; для конечной.
 	<canvas id='graph' width='800' height='500'></canvas>
 	<div>
 		Предупреждение: граф содержит много пустых переходов, поскольку китаец, сидящий у меня в подвале и рисующий
 		этот граф, не знаком с ДМ в принципе и просто следует заданному алгоритму.
 	</div>
+</section>
+<section>
+	<h2>Детерминизация автомата</h2>
+	<em>Продолжение следует...</em>
+	<div id='initial_table'>(не рассчитано)</div>
+	<div id='determinized_table'>(не рассчитано)</div>
 </section>
 </body>
 </html>

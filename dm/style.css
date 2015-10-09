@@ -5,6 +5,7 @@
 }
 
 sup sub { font-size: x-small; }
+code { border: 1px solid #eee; background: #f7f7f7; }
 .strike-over { text-decoration: overline; }
 .big-brackets::before {
 	content: '(';

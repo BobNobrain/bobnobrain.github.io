@@ -21,6 +21,171 @@ createContext=function(id)
 }
 
 /*
+	** Table class represents a table of n*m cells
+	** with title for the whole table and for
+	** every column and row.
+	**
+	** .rows and .cols fields store titles for columns and rows
+	** .set() and .get() manipulate with cells values
+	** .size() sets or returns (as {columns:n, rows:m}) table size
+	** .toHTMLString() returns HTML markup of this table with its content
+*/
+CELL_DEFAULT_VALUE='&mdash;';
+function Table(rows, cols, title)
+{
+	this.title=title;
+	
+	if(typeof rows == typeof 0)
+	{
+		this.rows=[];
+		for(var i=0; i<rows; i++) this.rows.push('('+i+')');
+	}
+	else this.rows=rows;
+	
+	if(typeof cols == typeof 0)
+	{
+		this.cols=[];
+		for(var i=0; i<cols; i++) this.cols.push('('+i+')');
+	}
+	else this.cols=cols;
+	
+	var numRows=this.rows.length;
+	var numCols=this.cols.length;
+	
+	var cells=[];
+	for(var row=0; row<numRows; row++)
+	{
+		cells.push([]);
+		for(var col=0; col<numCols; col++)
+		{
+			cells[row].push(CELL_DEFAULT_VALUE);
+		}
+	}
+	
+	this.get=function(row, col)
+	{
+		if(row>=0 && col>=0) return cells[row][col]; // all indicies are positive, return a cell content
+		if(row>=0) return cells[row]; // column index is negative, return the whole row
+		if(col>=0)
+		{ // row index is negative, return the whole column
+			var result=[];
+			for(var i=0; i<numRows; i++)
+			{
+				result.push(cells[i][col]);
+			}
+			return col;
+		}
+		// both indicies are negative, return all cells
+		return cells;
+	}
+	
+	this.set=function(content, row, col)
+	{
+		if(row>=0 && col>=0) cells[row][col]=content;
+		else if(row>=0)
+		{
+			for(var i=0; i<numCols; i++)
+			{
+				cells[row][i]=content;
+			}
+		}
+		else if(col>=0)
+		{
+			for(var i=0; i<numRows; i++)
+			{
+				cells[i][col]=content;
+			}
+		}
+		else
+		{
+			for(var row=0; row<numRows; row++)
+			{
+				for(var col=0; col<numCols; col++)
+				{
+					cells[row][col]=content;
+				}
+			}
+		}
+	}
+	
+	this.size=function(newRowsCount, newColsCount)
+	{
+		if(arguments.length<2) return { rows: numRows, columns: numCols };
+		
+		// rows
+		if(newRowsCount>numRows)
+		{
+			// expand
+			for(var row=numRows; row<newRowsCount; row++)
+			{
+				cells.push([]);
+				for(var col=0; col<numCols; col++)
+				{
+					cells[row].push(CELL_DEFAULT_VALUE);
+				}
+				
+				this.rows.push('('+row+')');
+			}
+		}
+		else
+		{
+			// contract
+			cells.splice(newRowsCount, numRows-newRowsCount);
+			this.rows.splice(newRowsCount, numRows-newRowsCount);
+		}
+		numRows=newRowsCount;
+		
+		// cols
+		if(newColsCount>numCols)
+		{
+			// expand
+			for(var col=numCols; col<newColsCount; col++)
+			{
+				for(var row=0; row<numRows; row++)
+				{
+					cells[row].push(CELL_DEFAULT_VALUE);
+				}
+				this.cols.push('('+col+')');
+			}
+		}
+		else
+		{
+			// contract
+			for(var row=0; row<numRows; row++)
+			{
+				cells[row].splice(newColsCount, numCols-newColsCount);
+			}
+			this.cols.splice(newColsCount, numCols-newColsCount);
+		}
+		numCols=newColsCount;
+	}
+	
+	this.toHTMLString=function()
+	{
+		var html='<table><caption>'+this.title+'</caption><tbody><tr><th>&mdash;</th>';
+		
+		// columns captions
+		for(var i=0; i<numCols; i++)
+		{
+			html+='<th>'+this.cols[i]+'</th>';
+		}
+		html+='</tr>';
+		
+		for(var row=0; row<numRows; row++)
+		{
+			html+='<tr><td>'+this.rows[row]+'</td>';
+			for(var col=0; col<numCols; col++)
+			{
+				html+='<td>'+cells[row][col]+'</td>';
+			}
+			html+='</tr>';
+		}
+		html+='</tbody></table>'
+		return html;
+	}
+}
+
+/*
 	** Formatting functions for formulas
 */
 function sup(text){ return '<sup>'+text+'</sup>'; } // upper index
@@ -568,9 +733,12 @@ window.onload=function()
 		
 		var struct=buildNode(model, 10, 10, start, end);
 		
-		byId('graph_width').value=struct.width+40;
-		byId('graph_height').value=struct.height+40;
-		byId('resize_graph').onclick();
+		if(byId('graph_auto_size').checked)
+		{
+			byId('graph_width').value=struct.width+40;
+			byId('graph_height').value=struct.height+40;
+			byId('resize_graph').onclick();
+		}
 		
 		var g=createContext('graph');
 		var penx, peny;
