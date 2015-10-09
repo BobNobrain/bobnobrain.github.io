@@ -65,3 +65,26 @@ canvas {
 	
 	display: block;
 }
+
+div.table-container table {
+	border-collapse: collapse;
+	border: 1px solid #000;
+}
+div.table-container td {
+	border: 1px solid #777;
+	padding: 3px;
+}
+div.table-container td:first-child {
+	border-right-color: #000;
+	background: #ddd;
+}
+div.table-container th {
+	border-bottom-color: #000;
+	background: #ddd;
+}
+div.table-container caption {
+	font-style: italic;
+	color: #444;
+	padding: 4px;
+	background: #ddd;
+}

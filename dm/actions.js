@@ -199,7 +199,8 @@ function brackets(text){ return '<span class="big-brackets">'+text+'</span>'; } 
 
 function Vertex(name, x, y)
 {
-	this.name=name;
+	this.name=name; this.toString=function(){ return this.name;}
+	
 	this.x=x; this.y=y;
 	this.width=VERTEX_WIDTH; this.height=VERTEX_HEIGHT;
 	
@@ -277,6 +278,20 @@ VERTEX_WIDTH=12; VERTEX_HEIGHT=26;
 EDGE_LENGTH=100;
 FONT_SIZE=16;
 ARROW_SIZE=10;
+
+function NameGenerator()
+{
+	var index=0;
+	var s='ABCDEFGHIJKLMNOPQRSTUVWXYZБГДЖЗИЛПУФЦЧШЪЫЭЮЯ0123456789@~&%$';
+	this.generate=function()
+	{
+		return s[index++];
+	}
+	this.isWornOut=function()
+	{
+		return index==s.length;
+	}
+}
 
 function Structure(start, end)
 {
@@ -698,11 +713,7 @@ window.onload=function()
 		
 		
 		
-		var _cl=0;
-		function genLetter()
-		{
-			return 'ABCDEFGHIJKLMNOPQRSTUVWXYZБГДЖЗИЛПУФЦЧШЪЫЭЮЯ'[_cl++];
-		}
+		var namer=new NameGenerator();
 		
 		var start=new Vertex('^', 10, 10); var end=new Vertex('$', 0, 0);
 		var buildNode=function(model, x, y, start, end)
@@ -720,7 +731,7 @@ window.onload=function()
 					{
 						inners.push(buildNode(model.operands[i],
 						x, y,
-						new Vertex(genLetter(), x, y), new Vertex(genLetter(), x, y)));
+						new Vertex(namer.generate(), x, y), new Vertex(namer.generate(), x, y)));
 					}
 					/*var head=new Vertex(genLetter(), 0, 0);
 					start.addNeighbour(null, head);
@@ -751,7 +762,7 @@ window.onload=function()
 					{
 						inners.push(buildNode(model.operands[i],
 						x, y,
-						new Vertex(genLetter(), x, y), new Vertex(genLetter(), x, y)));
+						new Vertex(namer.generate(), x, y), new Vertex(namer.generate(), x, y)));
 					}
 				return createConcatenation(inners, start, end, x, y);
 				
@@ -761,7 +772,7 @@ window.onload=function()
 					{
 						inners.push(buildNode(model.operands[i],
 						x, y,
-						new Vertex(genLetter(), x, y), new Vertex(genLetter(), x, y)));
+						new Vertex(namer.generate(), x, y), new Vertex(namer.generate(), x, y)));
 					}
 				return createParallels(inners, start, end, x, y);
 			}
@@ -785,6 +796,62 @@ window.onload=function()
 		
 		struct.paint(g);
 		struct.paintNames(g);
+		
+		// preparations for the next step...
+		var vertices=[struct.start];
+		
+		var findVertices=function(resultArray, node)
+		{
+			for(var i=0; i<node.neighbours.length; i++)
+			{
+				if(resultArray.indexOf(node.neighbours[i].vertex)!=-1) continue;
+				
+				resultArray.push(node.neighbours[i].vertex);
+				findVertices(resultArray, node.neighbours[i].vertex);
+			}
+		}
+		// gathering all nodes in the graph
+		findVertices(vertices, struct.start);
+		var terminals=['a', 'b'];
+		
+		// creating initial graph table (w/0 null chars)
+		var initialTable=new Table(terminals, vertices, 'Исходный граф (без пустых рёбер)');
+		
+		var findReachableVertices=function(allowedChar, head, result)
+		{
+			// ВНИМАНИЕ! Алгоритм уязвим к лямбда-петлям (свалится в stack overflow)
+			for(var i=0; i<head.neighbours.length; i++)
+			{
+				//if(result.indexOf(head.neighbours[i])!=-1) continue;
+				if(head.neighbours[i].char==allowedChar)
+				{
+					// нашли вершину, путь в которую содержит только пустые рёбра и allowedChar
+					result.push(head.neighbours[i].vertex);
+					findReachableVertices(null, head.neighbours[i].vertex, result);
+				}
+				else if(head.neighbours[i].char==null)
+				{
+					// всё ещё блуждаем по пустым рёбрам
+					findReachableVertices(allowedChar, head.neighbours[i].vertex, result);
+				}
+			}
+		}
+		
+		for(var vert=0; vert<vertices.length; vert++)
+		{
+			
+			for(var term=0; term<terminals.length; term++)
+			{
+				var reachable=[];
+				findReachableVertices(terminals[term], vertices[vert], reachable);
+				if(reachable.length>0)
+				{
+					initialTable.set(reachable.join(', '), term, vert);
+				}
+			}
+		}
+		
+		byId('initial_table').innerHTML=initialTable.toHTMLString();
 	}
 	
 	byId('resize_graph').onclick=function()
