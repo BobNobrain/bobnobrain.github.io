@@ -210,10 +210,17 @@ function Vertex(name, x, y)
 		this.neighbours.push({ char: char, vertex: vertex });
 	}
 	
+	// simply merges two vertices; result is put into this vertex
+	this.mergeWith=function(vertex)
+	{
+		for(var i=0; i<vertex.neighbours.length; i++)
+		{
+			this.neighbours.push(vertex.neighbours[i]);
+		}
+	}
+	
 	this.paint=function(ctx)
 	{
-		//ctx.moveTo(this.x+this.width/2, this.y+this.height/2);
-		
 		ctx.strokeStyle='#000';
 		ctx.fillStyle='#000';
 		ctx.lineWidth=2;
@@ -256,15 +263,10 @@ function Vertex(name, x, y)
 							middle.y);
 		}
 		
-		//ctx.stroke();
-		
 		var path=new Path2D();
 		path.arc(this.x+VERTEX_WIDTH/2, this.y+VERTEX_HEIGHT/2, VERTEX_WIDTH, 0, Math.PI*2, false);
 		ctx.fillStyle='#000';
 		ctx.fill(path);
-		
-		//ctx.fillStyle='#fff';
-		//ctx.fillText(this.name, this.x+4, this.y+4);
 	}
 	
 	this.paintNames=function(ctx)
@@ -338,8 +340,6 @@ function Structure(start, end)
 	
 	this.paint=function(ctx)
 	{
-		//ctx.strokeRect(x, y, this.width, this.height);
-		
 		for(var x in inners)
 		{
 			inners[x].paint(ctx);
@@ -375,7 +375,7 @@ function createCycle(head, innerStructure, x, y)
 	innerStructure.x=x;
 	innerStructure.y=y+innerStructure.width/2;
 	
-	head.x=x;//+innerStructure.width/2
+	head.x=x;
 	head.y=y;
 	
 	var s=new Structure(head, head);
@@ -444,7 +444,7 @@ function createConcatenation(innerStructures, before, after, x, y)
 	var maxh=innerStructures[0].height;
 	
 	before.addNeighbour(null, innerStructures[0].start);
-	innerStructures[0].x=penx; innerStructures[0].y=y;
+	innerStructures[0].x=penx; innerStructures[0].y=y; 
 	penx+=innerStructures[0].width+EDGE_LENGTH;
 	for(var i=1; i<innerStructures.length; i++)
 	{
@@ -618,13 +618,6 @@ window.onload=function()
 			}
 			
 			return expr.substring(wrappingLevels, expr.length-wrappingLevels);
-			
-			
-			/*while(expr[0]=='(' && expr[expr.length-1]==')')
-			{
-				expr=expr.substring(1, expr.length-1);
-			}
-			return expr;*/
 		}
 		var defineOuterOperator=function(expr)
 		{
@@ -705,11 +698,7 @@ window.onload=function()
 		
 		var regex=byId('reg_expr').value;
 		
-		//try
-		//{
-			var model=spdown(regex);
-		//}
-		//catch(e) { console.log(e); }
+		var model=spdown(regex);
 		
 		
 		
@@ -733,12 +722,6 @@ window.onload=function()
 						x, y,
 						new Vertex(namer.generate(), x, y), new Vertex(namer.generate(), x, y)));
 					}
-					/*var head=new Vertex(genLetter(), 0, 0);
-					start.addNeighbour(null, head);
-					//head.addNeighbour('his', inners[0].start);
-					//inners[0].end.addNeighbour('ieh', head);
-					head.addNeighbour(null, end);
-					var cycle=createCycle(head, inners[0], x, y);*/
 					
 					start.addNeighbour(null, end);
 					var cycle=createCycle(start, inners[0], x, y);
@@ -814,10 +797,7 @@ window.onload=function()
 		findVertices(vertices, struct.start);
 		var terminals=['a', 'b'];
 		
-		// creating initial graph table (w/0 null chars)
-		var initialTable=new Table(terminals, vertices, 'Исходный граф (без пустых рёбер)');
-		
-		var findReachableVertices=function(allowedChar, head, result)
+		window.findReachableVertices=function(allowedChar, head, result)
 		{
 			// ВНИМАНИЕ! Алгоритм уязвим к лямбда-петлям (свалится в stack overflow)
 			for(var i=0; i<head.neighbours.length; i++)
@@ -826,7 +806,9 @@ window.onload=function()
 				if(head.neighbours[i].char==allowedChar)
 				{
 					// нашли вершину, путь в которую содержит только пустые рёбра и allowedChar
-					result.push(head.neighbours[i].vertex);
+					if(result.indexOf(head.neighbours[i].vertex)==-1)
+						result.push(head.neighbours[i].vertex);
+					
 					findReachableVertices(null, head.neighbours[i].vertex, result);
 				}
 				else if(head.neighbours[i].char==null)
@@ -837,21 +819,35 @@ window.onload=function()
 			}
 		}
 		
-		for(var vert=0; vert<vertices.length; vert++)
+		window.buildTable=function(terms, verts, name)
 		{
+			var table=new Table(terms, verts, name);
 			
-			for(var term=0; term<terminals.length; term++)
+			for(var vert=0; vert<verts.length; vert++)
 			{
-				var reachable=[];
-				findReachableVertices(terminals[term], vertices[vert], reachable);
-				if(reachable.length>0)
+				for(var term=0; term<terms.length; term++)
 				{
-					initialTable.set(reachable.join(', '), term, vert);
+					var reachable=[];
+					window.findReachableVertices(terms[term], verts[vert], reachable);
+					if(reachable.length>0)
+					{
+						table.set(reachable.join(', '), term, vert);
+					}
 				}
 			}
+			
+			return table;
 		}
 		
+		// creating initial graph table (w/0 null chars)
+		var initialTable=window.buildTable(terminals, vertices, 'Исходный граф (с кучей пустых рёбер)');
+		
 		byId('initial_table').innerHTML=initialTable.toHTMLString();
+		
+		window.initialTable=initialTable;
+		window.graph={	vertices: vertices,
+						edgeNames: terminals
+		};
 	}
 	
 	byId('resize_graph').onclick=function()
@@ -859,5 +855,235 @@ window.onload=function()
 		var canvas=byId('graph');
 		canvas.width=byId('graph_width').value;
 		canvas.height=byId('graph_height').value;
+	}
+	
+	byId('sec3_simplify_btn').onclick=function()
+	{
+		/*
+			** TODO
+			**
+			** The algo seems to work incorrect, because it leaves
+			** some vertices unbound (see ex. 221#5, simplified table)
+			**
+		*/
+		
+		// let's simplify the graph by merging vertices with the only lambda-edge
+		var verts=window.graph.vertices;
+		
+		// we'll need to have a list of vertices that have this vertex as their neighbour
+		for(var i=0; i<verts.length; i++)
+		{
+			verts[i].backNeighbours=[];
+			verts[i].final=verts[i].neighbours.length==0;
+		}
+		for(var i=0; i<verts.length; i++)
+		{
+			for(var j=0; j<verts[i].neighbours.length; j++)
+			{
+				verts[i].neighbours[j].vertex.backNeighbours.push({ vertex: verts[i], char: verts[i].neighbours[j].char });
+			}
+		}
+		
+		// replaces edge: v->from => v->to
+		var rebind=function(v, from, to)
+		{
+			var ind=-1;
+			for(var i=0; i<v.neighbours.length; i++)
+			{
+				if(v.neighbours[i].vertex==from)
+				{
+					ind=i;
+					break;
+				}
+			}
+			if(ind==-1) console.log('wtf?!')
+			var char=v.neighbours[ind].char;
+			v.neighbours.splice(ind, 1, { vertex: to, char: char });
+			to.backNeighbours.push({ vertex: v, char: char });
+			for(var i=0; i<from.backNeighbours.length; i++)
+			{
+				if(from.backNeighbours[i].vertex==from)
+				{
+					from.backNeighbours.splice(i, 1);
+					break;
+				}
+			}
+		}
+		// replaces edge: from->v => to->v
+		var rebindBack=function(v, from, to)
+		{
+			var char='';
+			for(var i=0; i<v.backNeighbours.length; i++)
+			{
+				if(v.backNeighbours[i].vertex==from)
+				{
+					char=v.backNeighbours[i].char;
+					v.backNeighbours.splice(i, 1, { vertex: to, char: char });
+					break;
+				}
+			}
+			for(var i=0; i<from.neighbours.length; i++)
+			{
+				if(from.neighbours[i].vertex==v)
+				{
+					from.neighbours.splice(i, 1);
+					break;
+				}
+			}
+			to.neighbours.push({ vertex: v, char: char });
+		}
+		
+		// merges v1 and v2: v1 swallows w2
+		var mergeVertices=function(v1, v2)
+		{	
+			for(var i=0; i<v2.neighbours.length; i++)
+			{
+				if(v2.neighbours[i].vertex==v1)
+				{
+					// reflexive loop
+					v1.neighbours.push({ vertex: v1, char: v2.neighbours[i].char });
+					v1.backNeighbours.push({ vertex: v1, char: v2.neighbours[i].char });
+				}
+				rebindBack(v2.neighbours[i].vertex, v2, v1);
+			}
+			for(var i=0; i<v2.backNeighbours.length; i++)
+			{
+				if(v2.backNeighbours[i].vertex==v1)
+				{
+					// reflexive loop
+					v1.neighbours.push({ vertex: v1, char: v2.backNeighbours[i].char });
+					v1.backNeighbours.push({ vertex: v1, char: v2.backNeighbours[i].char });
+				}
+				rebind(v2.backNeighbours[i].vertex, v2, v1);
+			}
+			
+			// edges rebound, now let's check for repeats:
+			for(var i=0; i<v1.neighbours.length; i++)
+			{
+				for(var j=i+1; j<v1.neighbours.length; j++)
+				{
+					if(	v1.neighbours[i].char == v1.neighbours[j].char &&
+							v1.neighbours[i].vertex == v1.neighbours[j].vertex )
+					{
+						v1.neighbours.splice(j, 1);
+						--j;
+					}
+				}
+			}
+			for(var i=0; i<v1.backNeighbours.length; i++)
+			{
+				for(var j=i+1; j<v1.backNeighbours.length; j++)
+				{
+					if(	v1.backNeighbours[i].char == v1.backNeighbours[j].char &&
+							v1.backNeighbours[i].vertex == v1.backNeighbours[j].vertex )
+					{
+						v1.backNeighbours.splice(j, 1);
+						--j;
+					}
+				}
+			}
+			
+			// finally, we need to get out of lambda-loops
+			for(var i=0; i<v1.neighbours.length; i++)
+			{
+				if(v1.neighbours[i].vertex==v1 && v1.neighbours[i].char==null)
+				{
+					v1.neighbours.splice(i, 1);
+					--i;
+				}
+			}
+			for(var i=0; i<v1.backNeighbours.length; i++)
+			{
+				if(v1.backNeighbours[i].vertex==v1 && v1.backNeighbours[i].char==null)
+				{
+					v1.backNeighbours.splice(i, 1);
+					--i;
+				}
+			}
+			
+			v1.final = v1.final || v2.final;
+			// well done!
+			return v1;
+		}
+		
+		var merges=[];
+		for(var i=0; i<verts.length; i++)
+		{
+			if(verts[i].neighbours.length==1)
+			{
+				if(verts[i].neighbours[0].char==null)
+				{
+					// ok, verts[i] -(lambda)-> verts[i].nbs[0]; and this is the only neighbour,
+					// so verts[i].nbs[0] swallows verts[i]
+					merges.push({ swallower: verts[i].neighbours[0].vertex, swallowed: verts[i] });
+					mergeVertices(verts[i].neighbours[0].vertex, verts[i]);
+					verts.splice(i, 1);
+					--i;
+					continue;
+				}
+			}
+			if(verts[i].backNeighbours.length==1)
+			{
+				if(verts[i].backNeighbours[0].char==null)
+				{
+					// verts[i].bknbs[0] -(lambda)-> verts[i], and and this is the only bkneighbour,
+					// so bknbr swallows verts[i]
+					merges.push({ swallower: verts[i].backNeighbours[0].vertex, swallowed: verts[i] });
+					mergeVertices(verts[i].backNeighbours[0].vertex, verts[i]);
+					verts.splice(i, 1);
+					--i;
+					continue;
+				}
+			}
+		}
+		
+		// let's output merges:
+		var rnOut=createOutput('renamed_vertices');
+		
+		rnOut.putl('Список поглощений вершин при упрощении:');
+		for(var i=0; i<merges.length; i++)
+		{
+			rnOut.puts(merges[i].swallower.name);
+			rnOut.puts(merges[i].swallower.final?' (#)':'');
+			rnOut.puts(' <- '+merges[i].swallowed.name);
+			rnOut.putl(merges[i].swallowed.final?' (#)':'');
+		}
+		
+		rnOut.putl();
+		rnOut.putl('Переименование вершин: ');
+		// renaming vertices:
+		var namer=new NameGenerator();
+		//var renames=[];
+		for(var i=0; i<verts.length; i++)
+		{
+			if(verts[i].name=='^')
+				window.graph.start=verts[i];
+			var oldn=verts[i].name;
+			verts[i].name=namer.generate();
+			rnOut.putl(oldn+' -> '+verts[i].name+(verts[i].final?' (#)':''));
+		}
+		
+		var simplifiedTable=window.buildTable(window.graph.edgeNames, verts, 'Переходы в упрощённом графе:');
+		byId('simplified_table').innerHTML=simplifiedTable.toHTMLString();
+		window.graph.table=simplifiedTable;
+	}
+	
+	byId('sec3_determinize_btn').onclick=function()
+	{
+		alert('Остынь, паря, я ещё не успел это сделать!');
+		var verts=[ window.graph.start ];
+		var rawTable={};
+		for(var i=0; i<window.graph.terminals.length; i++)
+		{
+			rawTable[window.graph.terminals[i]]={};
+		}
+		
+		for(var i=0; i<verts.length; i++)
+		{
+			for(var j=0; j<window.graph.terminals.length; j++)
+			{
+				window.findReachable(window.graph.terminals[j], verts[i], rawTable[window.graph.terminals[j]]);
+			}
+		}
 	}
 }
