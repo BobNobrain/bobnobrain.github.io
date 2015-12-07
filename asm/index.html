@@ -1,0 +1,68 @@
+<!--doctype html-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Assembly</title>
+<link href="style.css"  rel="stylesheet"/>
+<script src="ide.js"></script>
+<script src="microp.js"></script>
+</head>
+<body>
+<table id='layout' height='100%'>
+<tr><td colspan="2" id='menu'>
+	<span>Перевести</span>
+	<span>Запустить</span>
+	<span>Запустить пошагово</span>
+	<span class='disabled'>Выполнить шаг</span>
+	<span class='disabled'>Остановить</span>
+</td></tr>
+<tr>
+	<td width='80%'><div id='code-box' contenteditable="true" spellcheck="false"></div>
+	</td><td>
+	<div id='bin-box'>
+		<div class='line'>23&nbsp;00 22 </div>
+		<div class='line'>77 </div>
+		<div class='line'>06 02 </div>
+		<div class='line'>54 </div>
+		<div class='line'>77 </div>
+	</div>
+	</td>
+</tr>
+<tr height='40' id='registers'><td colspan="2">
+	Регистры:
+	A<span class='register' id='reg_a'>00</span>
+	B<span class='register' id='reg_b'>00</span>
+	C<span class='register' id='reg_c'>00</span>
+	D<span class='register' id='reg_d'>00</span>
+	E<span class='register' id='reg_e'>00</span>
+	H<span class='register' id='reg_h'>00</span>
+	L<span class='register' id='reg_l'>00</span>
+	<button type='button' disabled>Edit...</button>
+	<span class='indicator' title='Переполнение стека'>OVR</span>
+	<span class='indicator' title='Остановка с помощью HLT запрещена!'>HLT</span>
+	<span class='indicator' title='Ошибка адресации'>ADR</span>
+	<span class='indicator' title='Другая ошибка'>ERR</span>
+</td></tr>
+<tr height='150' id='mem-dump'><td colspan="2">
+	<table><tr><td id='mem-display'>
+		<pre>
+<b>Mem:</b>  00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F    01 23 45 67 89 AB CD EF
+2200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    0h 0h 0h 0h 0h 0h 0h 0h
+2210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    0h 0h 0h 0h 0h 0h 0h 0h
+2220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    0h 0h 0h 0h 0h 0h 0h 0h
+2230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    0h 0h 0h 0h 0h 0h 0h 0h
+2240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    0h 0h 0h 0h 0h 0h 0h 0h
+2250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    0h 0h 0h 0h 0h 0h 0h 0h
+2260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    0h 0h 0h 0h 0h 0h 0h 0h
+2270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    0h 0h 0h 0h 0h 0h 0h 0h
+		</pre>
+	</td><td id='mem-display-control'>
+		<button type='button'>Jump to 2100h</button>
+		<button type='button'>Jump to 2200h</button>
+		<button type='button'>Jump to 2300h</button>
+		<button type='button' disabled>Edit...</button>
+	</td></tr></table>
+</td></tr>
+</table>
+</body>
+</html>

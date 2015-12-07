@@ -1,0 +1,10 @@
+body { background: #000; }
+
+#c {
+	position: fixed;
+	top: 2px; left: 2px;
+	
+	border: 1px dashed #f00;
+	
+	background: #f7f7f7;
+}

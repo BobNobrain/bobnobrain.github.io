@@ -1,0 +1,144 @@
+@charset "utf-8";
+
+html { width: 100%; height: 100%; }
+body.hacker { background: #000; color: #eee; }
+body { background: #f7f7f7; color: #333; padding: 0px; margin: 0px; width: 100%; height: 100%; }
+
+table#layout, table {
+	width: 100%;
+	height: 100%;
+	border-collapse: collapse;
+	vertical-align: top;
+	overflow: hidden;
+}
+
+table#layout td {
+	vertical-align: top;
+	overflow: auto;
+}
+
+.hacker #code-box {
+	border-color: #0c0;
+	color: #0c0;
+	background: #000;
+}
+
+
+#menu {
+	padding: 0px;
+	padding-left: 10px;
+	height: 22px;
+}
+#menu span {
+	padding: 0px 5px;
+	margin-left: 5px;
+	
+	font-weight: bold;
+	
+	display: inline-block;
+	height: 22px;
+	
+	cursor: pointer;
+}
+#menu span:hover {
+	background: #09C;
+	color: #fff;
+}
+#menu span.disabled, #menu span.disabled:hover {
+	color: #555;
+	background: none transparent;
+	text-shadow: 1px 1px 0px #bbb;
+	cursor: default;
+}
+
+
+#code-box, #bin-box {
+	width: calc(100% - 12px);
+	height: calc(100% - 12px);
+	
+	margin: 3px; margin-top: 0px;
+}
+
+#code-box {
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12pt;
+	padding: 3px;
+	
+	overflow: auto;
+	
+	border: 1px solid #ccc;
+	border-bottom-color: #eee;
+	border-right-color: #eee;
+	background: #fff;
+}
+#code-box:focus {
+	box-shadow: 0px 0px 2px #09F;
+}
+
+#code-box em { color: #06F; }
+#code-box b { color: #909; }
+#code-box i { color: #603; font-style: normal; }
+#code-box u { color: #900; text-decoration: none; }
+
+#bin-box {
+	border: 1px solid #333;
+	color: #006;
+	font-weight: bold;
+	font-family: Consolas, monospace;
+	font-size: 12pt;
+	padding: 3px;
+}
+#bin-box .line:hover {
+	background: #006;
+	color: #fff;
+}
+
+
+#registers td {
+	font-size: 18px;
+	vertical-align: middle !important;
+}
+
+span.register {
+	background: #000;
+	color: #06F;
+	padding: 0px 3px;
+	margin: 0px 5px 0px 2px;
+	
+	font-weight: bold;
+	font-family: Consolas, monospace;
+}
+
+span.indicator {
+	background: #000;
+	color: #030000;
+	font-weight: bold;
+	padding: 0px 5px;
+	margin: 0px 0px 0px 15px;
+	cursor: default;
+	
+	font-family: Consolas, monospace;
+	border-radius: 4px;
+}
+span.indicator.active {
+	color: #500;
+	background: #f00;
+	box-shadow: 0px 0px 5px red;
+}
+
+
+#mem-dump {
+
+}
+#mem-dump pre {
+	font-size: 16px;
+	height: 150px;
+	overflow-y: auto;
+	margin-bottom: 0px;
+}
+#mem-display {
+	width: 800px;
+}
+#mem-display-control button {
+	display: block;
+}
