@@ -184,7 +184,7 @@ BC.inr=function(r)
 		case 'M': byte='34'; break;
 		default: throw new Error('-r: incorrect register name!');
 	}
-	return byte;
+	return [byte];
 }
 BC.dcr=function(r)
 {
@@ -201,7 +201,7 @@ BC.dcr=function(r)
 		case 'M': byte='35'; break;
 		default: throw new Error('-r: incorrect register name!');
 	}
-	return byte;
+	return [byte];
 }
 
 BC.dad=function(rp)
@@ -490,9 +490,7 @@ OUT FAh; суффикс 'h' обязателен для шестнадцетир
 	<button type="button" onClick="translate();">Транслировать</button>
 </td><td valign="top" style='overflow: hidden; position: relative;'>
 	<pre id='output' style='margin: 5px 0px 5px 20px; font-size: 18px; right: 0px; left: 0px; overflow-y: auto; position: absolute; top: 0px; bottom: 0px;'>
-<i>2100</i>	77
-2101 12 00 23
-2104 00
+Нажмите "Транслировать", чтобы увидеть результат.
 	</pre>
 </td></tr></table>
 </body>
