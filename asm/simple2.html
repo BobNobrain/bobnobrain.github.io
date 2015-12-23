@@ -4,14 +4,29 @@
 <meta charset="utf-8">
 <title>TRANSLATOR</title>
 <script>
-window.addEventListener('onload', function()
+window.addEventListener('load', function()
 {
-	output=document.getElementById('output');
-	input=document.getElementById('input');
+	window.output=document.getElementById('output');
+	window.binary=document.getElementById('binary');
+	window.memDump=document.getElementById('mem_dump');
+	
+	window.switchTab=function(n)
+	{
+		if(n>2 || n<0) return;
+		output.style.display='none';
+		binary.style.display='none';
+		memDump.style.display='none';
+		[binary, output, memDump][n].style.display='block';
+	}
+	switchTab(0);
+	
+	window.input=document.getElementById('input');
+	window.em_start=document.getElementById('emulation_start');
+	window.em_end=document.getElementById('emulation_end');	
 	
 	input.onkeydown=function(ev)
 	{
-		if(event.keyCode===9)
+		if(ev.keyCode===9)
 		{
 			ev.preventDefault();
 			var v=this.value,s=this.selectionStart,e=this.selectionEnd;
@@ -22,34 +37,18 @@ window.addEventListener('onload', function()
 		}
 	};
 	
-	input.addEventListener('keydown', function(e)
+	document.addEventListener('keypress', function(ev)
 	{
-		if(e.keyCode === 9) { // tab was pressed
-			// get caret position/selection
-			var start = this.selectionStart;
-			var end = this.selectionEnd;
-	
-			var target = e.target;
-			var value = target.value;
-	
-			// set textarea value to: text before caret + tab + text after caret
-			target.value = value.substring(0, start)
-						+ "\t"
-						+ value.substring(end);
-	
-			// put caret at right position again (add one for the tab)
-			this.selectionStart = this.selectionEnd = start + 1;
-	
-			// prevent the focus lose
-			e.preventDefault();
-		}
-	}, false);
+		Emul.ports['FA'].buffer=ev.keyChar;
+		if(Emul.ports['FB'].state.readReady) Emul.ports['FB'].overflow=true;
+		Emul.ports['FB'].state.readReady=true;
+	});
 });
 
 outputBuffer=[];
 
 function out(line, bytes) { outputBuffer.push('<i>'+line+'</i>\t'+bytes.join(' ')); }
-function flush() { output.innerHTML=outputBuffer.join('\n'); };
+function flush() { binary.innerHTML=outputBuffer.join('\n'); };
 function clearBuffer() { outputBuffer=[]; }
 
 function hex(integer) { return integer.toString(16).toUpperCase(); }
@@ -409,12 +408,27 @@ function parseLine(line)
 	params=params.split(',');
 	
 	console.log('-'+cmd+'-');
-	var codes=BC[cmd.toLowerCase()].apply(null, params);
+	
+	var fn=BC[cmd.toLowerCase()];
+	if(typeof fn != typeof eval) throw new Error('No such operator: "'+cmd+'"!');
+	
+	var codes=fn.apply(null, params);
 	return codes;
+}
+function getCommand(line)
+{
+	line=line.trimLeft().trimRight();
+	var cmd=line.split(' ')[0].toLowerCase();
+	var params=line.substring(cmd.length+1, line.length);
+	params=params.replace(/ /g, '');
+	params=params.split(',');
+	
+	return { action:cmd, args:params };
 }
 
 function translate()
 {
+	Emul.reset();
 	var labels=[];
 	
 	var code=input.value.replace(/\r/g, '').split('\n');
@@ -426,9 +440,10 @@ function translate()
 	{
 		var ln=code[i].split(';')[0].trimLeft().trimRight();
 		if(ln.length<3) continue;
+		var label=null;
 		if(ln.indexOf(':')!=-1)
 		{
-			var label=ln.split(':')[0].trimLeft().trimRight();
+			label=ln.split(':')[0].trimLeft().trimRight();
 			labels.push({ name:label, addr:addr });
 			ln=ln.split(':')[1].trimLeft();
 		}
@@ -436,6 +451,10 @@ function translate()
 		{
 			var codes=parseLine(ln);
 			preform.push({ addr:addr, bytes:codes });
+			
+			var command=getCommand(ln);
+			Emul.commands.push({ label:label, action:command.action, args:command.args, addr:addr });
+			
 			addr+=codes.length;
 		}
 		catch(ex)
@@ -445,6 +464,7 @@ function translate()
 	}
 	
 	console.log(labels);
+	Emul.labels=labels;
 	
 	// restoring all labels adresses
 	for(var i=0; i<preform.length; i++)
@@ -459,9 +479,12 @@ function translate()
 				for(var x in labels)
 				{
 					if(labels[x].name==lbl)
+					{
 						a=labels[x].addr;
+					}
 				}
-				a=bytes(a);
+				if(a==0) { alert('Error! Undeclared label "'+lbl+'"!'); a=['XX', 'XX'] }
+				else a=bytes(a);
 				console.log('pre:'+preform[i].bytes.join(' '));
 				console.log('a:'+a.join(' '));
 				preform[i].bytes[j]=a[0];
@@ -475,7 +498,25 @@ function translate()
 	flush();
 	clearBuffer();
 }
+
+function emulate()
+{
+	if(typeof Emul.labels != typeof [])
+	{
+		alert('Сначала необходимо транслировать программу!');
+		return;
+	}
+	try
+	{
+		Emul.run(parseNum(em_start.value), parseNum(em_end.value));
+	}
+	catch(ex)
+	{
+		alert('Runtime error: '+ex.message);
+	}
+}
 </script>
+<script src="emul.js"></script>
 </head>
 <body style='height: 100%; padding: 0px; margin: 0px;'>
 <table width='100%' cellpadding="0" cellspacing="0" height="100%">
@@ -487,10 +528,23 @@ fn:	MOV A,B
 	RET
 OUT FAh; суффикс 'h' обязателен для шестнадцетиричных чисел!
 	</textarea>
-	<button type="button" onClick="translate();">Транслировать</button>
+	<button type="button" onClick="translate();">Транслировать</button>&nbsp;&nbsp;|&nbsp;&nbsp;
+	<button type="button" onClick="emulate();">Эмулировать</button>
+	с
+	<input id='emulation_start' type="number" style='width: 50px;' value="2100h" />
+	по
+	<input id='emulation_end' type="number" style='width: 50px;' value="2101h" />&nbsp;&nbsp;|&nbsp;&nbsp;
+	<button disabled type="button" onClick="translate();">Отладка</button>
 </td><td valign="top" style='overflow: hidden; position: relative;'>
-	<pre id='output' style='margin: 5px 0px 5px 20px; font-size: 18px; right: 0px; left: 0px; overflow-y: auto; position: absolute; top: 0px; bottom: 0px;'>
-Нажмите "Транслировать", чтобы увидеть результат.
+	<a href='javascript://' onclick='switchTab(0);' style='margin-left: 30px;'>Binary</a>
+	<a href='javascript://' onclick='switchTab(1);'>Emulator output</a>
+	<a href='javascript://' onclick='switchTab(2);'>Memory dump</a>
+	<pre id='binary' style='margin: 5px 0px 5px 20px; font-size: 18px; right: 0px; left: 0px; overflow-y: auto; position: absolute; top: 30px; bottom: 0px;'>Нажмите "Транслировать", чтобы увидеть результат.</pre>
+	<pre id='output' style='margin: 5px 0px 5px 20px; font-size: 18px; right: 0px; left: 0px; overflow-y: auto; position: absolute; top: 30px; bottom: 0px;'>
+	output
+	</pre>
+	<pre id='mem_dump' style='margin: 5px 0px 5px 20px; font-size: 18px; right: 0px; left: 0px; overflow-y: auto; position: absolute; top: 30px; bottom: 0px;'>
+	memory dump
 	</pre>
 </td></tr></table>
 </body>
