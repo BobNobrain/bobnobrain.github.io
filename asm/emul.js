@@ -1,20 +1,3 @@
-function parseNum(str)
-{
-	console.log(str);
-	if(typeof str == typeof 0) return str;
-	if(str[str.length-1]=='h')
-	{
-		return Number.parseInt(str.substring(0, str.length-1), 16);
-	}
-	return Number.parseInt(str, 10);
-}
-function limitByte(n)
-{
-	n%=256;
-	if(n<0) n+=256;
-	return n;
-}
-
 function Port(addr)
 {
 	this.addr=addr;
@@ -85,15 +68,35 @@ Emul=
 	},
 	memoryDump: function()
 	{
+		var lines=[];
 		
+		//       '----  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --'
+		var line='       0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F';
+		for(var i=this.memStart; i<dec('2400'); i++)
+		{
+			if(i%16==0)
+			{
+				lines.push(line);
+				
+				line=hex(i)+'  ';
+			}
+			var tmp=hex(this.memRead(i));
+			if(tmp.length<2) tmp='0'+tmp;
+			line+=tmp+' ';
+		}
+		lines.push(line+'');
+		
+		memDump.innerHTML=lines.join('\n');
 	},
 	
 	fn: {},
 	
 	outBuffer: [],
+	outBufferLimit: 100,
 	out: function(msg)
 	{
 		this.outBuffer.push(msg);
+		if(this.outBuffer.length>this.outBufferLimit) this.outBuffer.shift();
 	},
 	flush: function()
 	{
@@ -116,17 +119,26 @@ Emul=
 			if(this.commands.addr==start) this.commandPointer=i;
 		}
 		
-		this.stopAddr=dec(stop);
-		this.jobID=setInterval(function(){Emul.doStep();}, 200);
+		this.stopAddr=stop;
+		this.jobID=setInterval(function(){Emul.doStep();}, this.interval);
 	},
 	
 	doStep: function()
 	{
+		if(typeof this.commands[this.commandPointer] != typeof {})
+		{
+			this.stop();
+			console.log('commandPointer out of borders');
+			console.log(this.stopAddr);
+			this.out('<em>Bad pointer error</em>');
+			this.flush();
+			return;
+		}
 		if(this.commands[this.commandPointer].addr==this.stopAddr)
 		{
 			this.out(hex(this.stopAddr)+': <b>STOP addr reached</b>');
 			this.flush();
-			clearInterval(this.jobID);
+			this.stop();
 			return;
 		}
 		
@@ -151,11 +163,45 @@ Emul=
 		}
 		
 		console.log(code);
-		var msg=this.fn[cmd.action].apply(this, cmd.args);
+		var msg;
+		try
+		{
+			msg=this.fn[cmd.action].apply(this, cmd.args);
+		}
+		catch(ex)
+		{
+			this.stop();
+			this.out(code+' <em>RUNTIME ERROR</em>');
+			this.flush();
+			return;
+		}
 		if(!this.jump) this.commandPointer++;
 		
 		this.out(code+'; <b>'+msg+'</b>');
 		this.flush();
+	},
+	
+	stop: function()
+	{
+		clearInterval(this.jobID);
+		this.jobID=-1;
+	},
+	
+	resume: function()
+	{
+		this.jobID=setInterval(function(){Emul.doStep();}, this.interval);
+	},
+	
+	changeInterval: function(newInterval)
+	{
+		if(this.jobID==-1)
+		{
+			this.interval=newInterval;
+			return;
+		}
+		this.stop();
+		this.interval=newInterval;
+		this.resume();
 	}
 };
 
@@ -233,8 +279,8 @@ Emul.ports['FB'].write=function(d8)
 		
 		switch(d8 & (2 | 1))
 		{
-			case 0: this.state.innerDivider='sync'; break;
-			case 1: this.state.innerDivider='1x'; break;
+			case 0: this.state.innerDivider='sync <em>(not recommended)</em>'; break;
+			case 1: this.state.innerDivider='1x <em>(not recommended)</em>'; break;
 			case 2: this.state.innerDivider='16x'; break;
 			case 2|1: this.state.innerDivider='64x'; break;
 		}
@@ -280,7 +326,7 @@ Emul.ports['FA'].read=function()
 {
 	if(!Emul.ports['FB'].state.receiveAllowed)
 	{
-		console.log('Read not allowed!');
+		Emul.out('FA: <em>Read not allowed!</em>');
 		return 0;
 	}
 	Emul.ports['FB'].state.readReady=false;
@@ -290,7 +336,7 @@ Emul.ports['FA'].write=function(d8)
 {
 	if(!Emul.ports['FB'].state.sendAllowed)
 	{
-		console.log('Write not allowed!');
+		Emul.out('FA: <em>Write not allowed!</em>');
 		return;
 	}
 	Emul.ports['FB'].state.writeReady=false;
@@ -298,11 +344,76 @@ Emul.ports['FA'].write=function(d8)
 	setTimeout("Emul.ports['FB'].state.writeEmpty=true", 100);
 	setTimeout("Emul.ports['FB'].state.writeReady=true", 150);
 	Emul.out('<b>FA speaks: <u>'+hex(d8)+'</u>!</b>');
+	terminal.value+=String.fromCharCode(d8);
+}
+
+Emul.ports['E0']=new Port('E0');
+Emul.ports['E1']=new Port('E1');
+Emul.ports['E2']=new Port('E2');
+Emul.ports['E3']=new Port('E3');
+
+Emul.ports['E0'].write=Emul.ports['E2'].write=function(d8)
+{
+	Emul.out('<em>Warning!</em> Writing to '+this.addr+' is unrecommended!');
+}
+
+Emul.ports['E1'].state={
+	MSBLoaded: false, LSBLoaded: false,
+	mode: 'impulse', countMode: 'bin',
+	compareMSB: 55, compareLSB: 20
+};
+Emul.ports['E1'].write=function(d8)
+{
+	
+}
+
+Emul.ports['E3'].write=function(d8)
+{
+	switch(d8 & (128|64))
+	{
+		case 64:
+			if(d8 & (32|16) == 0)
+			{
+				Emul.out('<em>Error! E1 timer stopped!</em>');
+				Emul.flush();
+				Emul.stop();
+				return;
+			}
+			Emul.ports['E1'].state.MSBLoaded=(d8 & 32 == 0);
+			Emul.ports['E1'].state.LSBLoaded=(d8 & 16 == 0);
+			
+			switch(d8 & (8|4|2))
+			{
+				case 4:		Emul.ports['E1'].state.mode='impulse';
+						break;
+				case (4|2):	Emul.ports['E1'].state.mode='"meandr"';
+						break;
+				default:	Emul.ports['E1'].state.mode='<em>unrecognized</em>';
+							Emul.out('<em>Warning!</em> Unrecognized timer mode!');
+							Emul.flush();
+						break;
+			}
+			
+			Emul.ports['E1'].state.countMode=((d8 & 1)==0? 'bin' : 'dec');
+			
+			Emul.out('-- Timer configuration set: --');
+			Emul.out('- Mode: '+Emul.ports['E1'].state.mode);
+			Emul.out('- Count mode: '+Emul.ports['E1'].state.countMode);
+			Emul.out('- Counter load order: '+['<em>nope</em>', 'least', 'most', 'least, most'][(d8 & (32|16))>>4]);
+			
+			
+			break;
+			
+		default:
+			Emul.out('<em>Warning!</em> You should not use this chan.!');
+			Emul.flush();
+			break;
+	}
 }
 
 
 
-for(var i=Emul.memStart; i<dec('23FF'); i++)
+for(var i=Emul.memStart; i<dec('2400'); i++)
 {
 	Emul.memSet(i, Math.floor(Math.random()*255));
 }
@@ -442,8 +553,8 @@ Emul.fn.jmp=function(addr, condition)
 {
 	if(condition != '' && condition != undefined)
 	{
-		if(!Emul.flags[condition])
-			return;
+		if(!Emul.getFlag(condition))
+			return 'false';
 	}
 	this.jump=true;
 	Emul.commandPointer=addr;
@@ -465,8 +576,8 @@ Emul.fn.ret=function(condition)
 {
 	if(condition != '' && condition != undefined)
 	{
-		if(!Emul.flags[condition])
-			return;
+		if(!Emul.getFlag(condition))
+			return 'false';
 	}
 	return hex(this.commands[this.commandPointer=this.stack.pop()].addr);
 }
