@@ -5,6 +5,11 @@
 	width: 100%;
 	height: 90%;
 	box-sizing: border-box;
+	
+	-o-tab-size: 4;
+	-webkit-tab-size: 4;
+	-moz-tab-size: 4;
+	tab-size: 4;
 }
 
 

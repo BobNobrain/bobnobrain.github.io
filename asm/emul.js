@@ -56,6 +56,8 @@ Emul=
 	stopAddr: 0,
 	jobID: -1,
 	
+	debugLogging: true,
+	
 	mem: [],
 	memStart: dec('2280'),
 	memRead: function(addr)
@@ -110,13 +112,15 @@ Emul=
 		this.stack=[];
 		this.commands=[];
 		this.commandPointer=0;
+		
+		this.ports['FB'].reset();
 	},
 	
 	run: function(start, stop)
 	{
 		for(var i=0; i<this.commands.length; i++)
 		{
-			if(this.commands.addr==start) this.commandPointer=i;
+			if(this.commands[i].addr==start) { this.commandPointer=i; break; }
 		}
 		
 		this.stopAddr=stop;
@@ -162,7 +166,7 @@ Emul=
 			}
 		}
 		
-		console.log(code);
+		if(this.debugLogging) console.log(code);
 		var msg;
 		try
 		{
@@ -216,20 +220,26 @@ Object.defineProperty(Emul.reg, 'M', {
  *
 */
 Emul.ports['FB']=new Port('FB');
-Emul.ports['FB'].state={
-	stopBits:'0',
-	parityControl:'none',
-	byteLength: 8,
-	innerDivider: '1x',
+Emul.ports['FB'].reset=function()
+{
+	Emul.ports['FB'].state={
+		stopBits:'0',
+		parityControl:'none',
+		byteLength: 8,
+		innerDivider: '1x',
+		
+		readReady:false, writeReady: false, writeEmpty: true,
+		
+		stopBitLost: false, parityError: false, overflow: false,
+		
+		receiveAllowed: false, sendAllowed: false,
+		
+		mode: true // mode or command
+	};
 	
-	readReady:false, writeReady: false, writeEmpty: true,
-	
-	stopBitLost: false, parityError: false, overflow: false,
-	
-	receiveAllowed: false, sendAllowed: false,
-	
-	mode: true // mode or command
-};
+	setTimeout(function(){Emul.ports['FB'].state.writeReady=true;}, 500);
+}
+Emul.ports['FB'].reset();
 Emul.ports['FB'].read=function()
 {
 	var result=0;
@@ -297,16 +307,6 @@ Emul.ports['FB'].write=function(d8)
 	{
 		if((d8 & 64)!=0) // reset
 		{
-			this.state={
-				stopBits:'0',
-				parityControl:'none',
-				byteLength: 8,
-				innerDivider: '1x',
-				readReady:false, writeReady: false, writeEmpty: true,
-				stopBitLost: false, parityError: false, overflow: false,
-				receiveAllowed: false, sendAllowed: false,
-				mode: true 
-			};
 			Emul.out('FB port received <b>reset</b> command!');
 			return;
 		}
@@ -320,6 +320,12 @@ Emul.ports['FB'].write=function(d8)
 		this.state.sendAllowed=(d8 & 1)!=0;
 	}
 }
+
+
+/*
+ * PORT <FA>
+ *
+*/
 
 Emul.ports['FA']=new Port('FA');
 Emul.ports['FA'].read=function()
@@ -478,29 +484,29 @@ Emul.fn.inx=function(rp)
 }
 Emul.fn.dcx=function(rp)
 {
-	Emul.reg[rp[1]]--;
-	if(Emul.reg[rp[1]]<0)
+	this.reg[rp[1]]--;
+	if(this.reg[rp[1]]<0)
 	{
-		Emul.reg[rp[1]]+=256;
-		Emul.reg[rp[0]]--;
-		if(Emul.reg[rp[0]]<0)
+		this.reg[rp[1]]+=256;
+		this.reg[rp[0]]--;
+		if(this.reg[rp[0]]<0)
 		{
-			Emul.reg[rp[1]]=255;
-			Emul.reg[rp[0]]=255;
+			this.reg[rp[1]]=255;
+			this.reg[rp[0]]=255;
 		}
 	}
-	return Emul.reg[rp[1]]+Emul.reg[rp[0]]*256;
+	return this.reg[rp[1]]+this.reg[rp[0]]*256;
 }
 
-Emul.fn.aci=function(d8) { Emul.reg.A+=parseNum(d8); Emul.setFlags(); return Emul.reg.A=limitByte(Emul.reg.A); }
-Emul.fn.sbi=function(d8) { Emul.reg.A-=parseNum(d8); Emul.setFlags(); return Emul.reg.A=limitByte(Emul.reg.A); }
+Emul.fn.aci=function(d8) { this.reg.A+=parseNum(d8); this.setFlags(); return this.reg.A=limitByte(this.reg.A); }
+Emul.fn.sbi=function(d8) { this.reg.A-=parseNum(d8); this.setFlags(); return this.reg.A=limitByte(this.reg.A); }
 		
-Emul.fn.adi=function(d8) { Emul.reg.A+=parseNum(d8); Emul.reg.A%=256; return Emul.reg.A=limitByte(Emul.reg.A); }
-Emul.fn.sui=function(d8) { Emul.reg.A-=parseNum(d8); Emul.reg.A%=256; return Emul.reg.A=limitByte(Emul.reg.A); }
-Emul.fn.ani=function(d8) { Emul.reg.A&=parseNum(d8); Emul.setFlags(); return Emul.reg.A=limitByte(Emul.reg.A); }
-Emul.fn.xri=function(d8) { Emul.reg.A^=parseNum(d8); Emul.setFlags(); return Emul.reg.A=limitByte(Emul.reg.A); }
-Emul.fn.ori=function(d8) { Emul.reg.A|=parseNum(d8); Emul.setFlags(); return Emul.reg.A=limitByte(Emul.reg.A); }
-Emul.fn.cpi=function(d8) { Emul.reg.A-=parseNum(d8); Emul.setFlags(); return Emul.reg.A=limitByte(Emul.reg.A); }
+Emul.fn.adi=function(d8) { this.reg.A+=parseNum(d8); this.setFlags(); return this.reg.A=limitByte(this.reg.A); }
+Emul.fn.sui=function(d8) { this.reg.A-=parseNum(d8); this.setFlags(); return this.reg.A=limitByte(this.reg.A); }
+Emul.fn.ani=function(d8) { this.reg.A&=parseNum(d8); this.setFlags(); return this.reg.A=limitByte(this.reg.A); }
+Emul.fn.xri=function(d8) { this.reg.A^=parseNum(d8); this.setFlags(); return this.reg.A=limitByte(this.reg.A); }
+Emul.fn.ori=function(d8) { this.reg.A|=parseNum(d8); this.setFlags(); return this.reg.A=limitByte(this.reg.A); }
+Emul.fn.cpi=function(d8) { this.reg.A-=parseNum(d8); this.setFlags(); return this.reg.A=limitByte(this.reg.A); }
 
 Emul.fn.daa=function(){throw new Error('Not implemented yet');}
 Emul.fn.cma=function(){ this.reg.A=255^this.reg.A; }
@@ -531,7 +537,7 @@ Emul.fn.lhld=function(addr)
 }
 Emul.fn.lda=function(addr)
 {
-	return Emul.reg.A=Emul.memRead(addr);
+	return Emul.reg.A=Emul.memRead(parseNum(addr));
 }
 Emul.fn.stax=function(rp)
 {
@@ -544,7 +550,7 @@ Emul.fn.shld=function(addr)
 }
 Emul.fn.sta=function(addr)
 {
-	Emul.memSet(addr, Emul.reg.A);
+	Emul.memSet(parseNum(addr), Emul.reg.A);
 	return Emul.reg.A;
 }
 Emul.fn.xchg=function(){ throw new Error('Not implemented yet'); }
@@ -592,7 +598,7 @@ Emul.fn.pop=function(rp)
 	var r=Emul.stack.pop();
 	Emul.reg[rp[0]]=Math.floor(r/256);
 	Emul.reg[rp[1]]=r%256;
-	return r/256;
+	return r;
 }
 
 Emul.fn.xthl=function(){throw new Error('Not implemented yet');}

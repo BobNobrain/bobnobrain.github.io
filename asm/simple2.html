@@ -43,7 +43,8 @@ window.addEventListener('load', function()
 	
 	terminal.addEventListener('keypress', function(ev)
 	{
-		Emul.ports['FA'].buffer=ev.keyChar;
+		Emul.ports['FA'].buffer=ev.charCode;
+		console.log('Input: '+ev.charCode);
 		if(Emul.ports['FB'].state.readReady) Emul.ports['FB'].overflow=true;
 		Emul.ports['FB'].state.readReady=true;
 		
@@ -161,6 +162,7 @@ function translate()
 
 function emulate()
 {
+	terminal.value='';
 	switchTab(1);
 	if(typeof Emul.labels != typeof [])
 	{
