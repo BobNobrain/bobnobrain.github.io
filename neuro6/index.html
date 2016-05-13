@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Тот скандинавский чувак</title>
+	<script src="kh.js"></script>
+</head>
+<body>
+Открыть консоль - ctrl+shift+k или ctrl+shift+j. Функции и переменные:
+<ul>
+	<li><code>alp</code> - параметр α, например, <code>0.3</code></li>
+	<li><code>train</code> - массив тестовых примеров, например,
+		<code>[[2, -1, -2, 1, 0], [2, -1, -1, 1, 0]]</code>
+	</li>
+	<li><code>f(h), df(h)</code> - соответственно активационная функция и её производная (задаются как функции!)</li>
+	<li><code>printW(), printS(), printDWs(), printDeltas()</code> - возвращают форматированные массивы соответственно
+		<code>w<sub>ij</sub><sup>q</sup></code>, <code>s<sub>i</sub><sup>q</sup></code>,
+		<code>Δw<sub>ij</sub><sup>q</sup></code>, <code>Δ<sub>i</sub><sup>q</sup></code>
+	</li>
+	<li><code>init(inputsCount, outputsCount, hiddenShema, initialW)</code> -
+		инициализирует все массивы. <br />
+		Пример: <code>init(2, 3, '3:3:1', 0)</code> создаст массивы на нейросеть с двумя входами, тремя выходами,
+		тремя скрытыми слоями (с количеством нейронов 3:3:1), и инициализирует все весовые коэффициэнты нулём.
+	</li>
+	<li><code>calcDirect(p)</code> - просчитывает массив s (прогоняет сеть в прямом направлении) для примера
+	<code>train[p]</code></li>
+	<li><code>calcBack(p)</code> - просчитывает массив deltas (двойственные переменные, т.е. прогоняет сеть в
+		обратном направлении)
+	</li>
+	<li><code>calcDeltaWs()</code> - просчитывает <code>Δw<sub>ij</sub><sup>q</sup></code>. <b>ВНИМАНИЕ!</b> При вызове
+		этой функции несколько раз подряд полученные значения суммируются! Для обнуления массива использовать следующую
+		функцию.
+	</li>
+	<li><code>teach()</code> - обучает весовые коэффициэнты, прибавляя к ним <code>Δw</code>. При этом массив
+		<code>Δw</code> зануляется.
+	</li>
+	<li><code>D()</code> - рассчитывает критериальную функцию в данный момент времени</li>
+	<li><code>push(), pop()</code> - сохраняет/извлекает текущие массивы
+		<code>w</code>, <code>s</code>, <code>dw</code>, <code>deltas</code> в истории (<b>НЕ РАБОТАЕТ</b>)</li>
+</ul>
+Пример кода для прогонки двух примеров, если обучение происходит по эпохам (после прогонки всех примеров):
+<pre>
+	train=[[2, -1, -2, 1, 0], [2, -1, -1, 1, 0]];
+	alp=0.3;
+	f=function(h){return h+0.5;};
+	var df=function(h){return 1;};
+
+	[init(3,2,'3:3:1',0),
+	'D: '+D(),
+	'прогоняем первый пример:',
+	calcDirect(0),
+	calcBack(0),
+	'eps: '+eps.join(', '),
+	calcDeltaWs(),
+	'прогоняем второй пример:',
+	calcDirect(1),
+	calcBack(1),
+	'eps: '+eps.join(', '),
+	calcDeltaWs(),
+	'обучаем:',
+	teach(),
+	'D: '+D()].join('\n\n');
+</pre>
+(вставить в консоль и выполнить)<br />
+Индексы массивов:<br />
+<code>w<sub>ij</sub><sup>q</sup> = w[q-1][i-1][j]</code><br />
+<code>s<sub>i</sub><sup>q</sup> = s[q][i-1]</code> (q=0 => это не выходы, а входы)<br />
+<code>Δw<sub>ij</sub><sup>q</sup> = dw[q-1][i-1][j]</code><br />
+<code>Δ<sub>i</sub><sup>q</sup> = deltas[q-1][i-1]</code><br />
+</body>
+</html>
