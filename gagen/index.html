@@ -8,19 +8,159 @@
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
         crossorigin="anonymous"
     >
+    <script src="dom.js"></script>
+    <script src="parser.js"></script>
+    <script src="index.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Gagen</title>
+
+    <style>
+        .blue { color: #038; }
+        .red { color: #831; }
+        .purple { color: #95b; }
+        .grey { color: #999; }
+        .bold { font-weight: bold; }
+        .italic { font-style: italic; }
+        .code { font-family: Consolas, monospace; }
+    </style>
 </head>
 <body>
-    <header>
-        <h2>Gagen Framework <span class="badge badge-primary">v. 1.1.0 Lambda-Wolf</span></h2>
-        <h4>Generate supplimental code for your labs</h4>
+    <header class="p-3">
+        <h2>Gagen Framework <span class="badge badge-primary badge-pill">v. 1.1.0 Lambda-Wolf</span></h2>
+        <h6 class="text-muted">Supplimental code for your labs</h6>
     </header>
-    <section id="content">
-        Checkboxes...
+    <section class="p-3">
+        <h4>Content</h4>
+        <p>
+            Copy this to your environment.txt file.
+            <a href="#" id="select_all_link">Click to select all</a>
+        </p>
+        <pre class="border border-primary p-2" style="max-height: 500px; overflow: auto;" id="content">
+% Constants
+true \a b. a
+false \a b. b
+
+zero        \f x. x
+one         \f x. f x
+two         \f x. f (f x)
+three       \f x. f (f (f x))
+four        \f x. f (f (f (f x)))
+five        \f x. f (f (f (f (f x))))
+six         \f x. f (f (f (f (f (f x)))))
+seven       \f x. f (f (f (f (f (f (f x))))))
+eight       \f x. f (f (f (f (f (f (f (f x)))))))
+nine        \f x. f (f (f (f (f (f (f (f (f x))))))))
+ten         \f x. f (f (f (f (f (f (f (f (f (f x)))))))))
+eleven      \f x. f (f (f (f (f (f (f (f (f (f (f x))))))))))
+twelve      \f x. f (f (f (f (f (f (f (f (f (f (f (f x)))))))))))
+thirteen    \f x. f (f (f (f (f (f (f (f (f (f (f (f (f x))))))))))))
+fourteen    \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f x)))))))))))))
+fifteen     \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x))))))))))))))
+sixteen     \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x)))))))))))))))
+seventeen   \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x))))))))))))))))
+eighteen    \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x)))))))))))))))))
+nineteen    \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x))))))))))))))))))
+twenty      \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x)))))))))))))))))))
+twentyone   \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x))))))))))))))))))))
+twentytwo   \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x)))))))))))))))))))))
+twentythree \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x))))))))))))))))))))))
+twentyfour  \f x. f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x)))))))))))))))))))))))
+
+% Combinators
+Y \f. (\x. f (x x)) (\x. f (x x))
+
+% Math
+pred        \n f x. n (\g h. h (g f))(\u. x)(\u. u)
+succ        \n f x. f (n f x)
+iszero      \n. n (\x a b.b)
+if          \a b c. a b c (\a b. a)
+minus       \a b. if (iszero b) a (minus (pred a) (pred b))
+plus        \a b. if (iszero b) a (plus (succ a) (pred b))
+mul         \a b. if (iszero b) zero (plus a (mul a (pred b)))
+sqr         \a. mul a a
+div         \x y. if (iszero (minus y x)) (succ (div (minus x y) y)) zero
+isGt        \x y. iszero (minus y x)
+isLt        \x y. iszero (minus x y)
+
+% Logic
+and         \x y. if x y false
+or          \x y. if x true y
+impl        \x y. if x y true
+
+% Pairs
+pair        \x y z. z x y
+fst         \p. p (\x y. x)
+snd         \p. p (\x y. y)
+
+% Lists (via pairs)
+nilP        pair true true
+isnilP      fst
+consP       \h. \t. pair false (pair h t)
+headP       \z. fst (snd z)
+tailP       \z. snd (snd z)
+
+mapP        \f list. if (isnilP list) nilP (consP (f (headP list)) (mapP f (tailP list)))
+foldlP      \f z0 list. if (isnilP list) z0 (foldlP f (f z0 (headP list)) (tailP list))
+
+% Lists
+nil         \c n. n
+isnil       \l. l (\h t. false) true
+cons        \h. \t c. \n. c h (t c n)
+head        \l. l (\h t. h) false
+tail        \l. fst (l (\x p. pair (snd p) (cons x (snd p))) (pair nil nil))
+
+map         \f list. if (isnil list) nil (cons (f (head list)) (map f (tail list)))
+foldl       \f z0 list. if (isnil list) z0 (foldl f (f z0 (head list)) (tail list))
+        </pre>
     </section>
-    <footer>
-        &copy; 2018 <a href="https://github.com/BobNobrain">@BobNobrain</a>
+    <section class="p-3">
+        <h4>Additional info</h4>
+        <p>
+            A note about syntax: every line that cannot be parsed will be skipped silently.
+            So lines beginning with <code>%</code> are used as comments.
+            When using SublimeText, select Erlang syntax hilighting to achieve better look.
+        </p>
+    </section>
+    <section class="p-3">
+        <h4>List generator</h4>
+        <form id="list_generator">
+            <div class="form-row align-items-center">
+                <div class="col-xs-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
+                    <div class="form-group">
+                        <label for="list_content">List Content</label>
+                        <input
+                            type="text"
+                            value="one two three"
+                            class="form-control"
+                            id="list_content"
+                            placeholder="Enter list content"
+                        >
+                        <small class="form-text text-muted">Enter space-separated values</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="list_type">List Type</label>
+                        <select id="list_type" class="form-control">
+                            <option value="pairs">Pairs (nilP)</option>
+                            <option value="fn">Functional (nil)</option>
+                        </select>
+                        <small class="form-text text-muted">Choose a list representation</small>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Generate</button>
+                    </div>
+                    <div class="form-group">
+                        <div class="code" id="list_result">...</div>
+                        <small class="form-text text-muted">
+                            Result
+                            (<a href="#" id="select_list_link">select all</a>)
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </section>
+    <footer class="p-3">
+        &copy; 2018 <a href="https://github.com/BobNobrain">@BobNobrain</a>, under MIT license
     </footer>
 </body>
 </html>
