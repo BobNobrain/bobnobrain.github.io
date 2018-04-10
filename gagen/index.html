@@ -80,10 +80,10 @@ C           \x y z. x z y
 pred        \n f x. n (\g h. h (g f))(\u. x)(\u. u)
 succ        \n f x. f (n f x)
 iszero      \n. n (\x a b.b)
-if          \a b c. a b c (\a b. a)
+if          \a b c. a b c
 minus       \a b. if (iszero b) a (minus (pred a) (pred b))
-plus        \a b. if (iszero b) a (plus (succ a) (pred b))
-mul         \a b. if (iszero b) zero (plus a (mul a (pred b)))
+plus        \a b f x. a f (b f x) 
+mul         \a b f x. a (b f) x
 sqr         \a. mul a a
 % integer division
 div         \x y. if (iszero (minus y x)) (succ (div (minus x y) y)) zero
