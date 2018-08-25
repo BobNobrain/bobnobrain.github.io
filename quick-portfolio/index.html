@@ -6,19 +6,129 @@
     <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
     <title>Краткое портфолио</title>
+    <style>
+        [v-cloak] > * {
+            display: none;
+        }
+        [v-cloak]::before {
+            content: " ";
+            display: block;
+            width: 16px;
+            height: 16px;
+            background-image: url('data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==');
+        }
+
+        .v-jumbotron__wrapper {
+            text-align: center;
+        }
+        .v-jumbotron__image {
+            position: static;
+            max-width: 100%;
+            min-width: unset;
+            max-height: 500px;
+            transform: none;
+        }
+        .v-card__text > div:first-child {
+            padding-bottom: 16px;
+        }
+        a { text-decoration: none; }
+    </style>
 </head>
 <body>
     <div id="app">
-        <v-app>
+        <v-app v-cloak>
+            <v-navigation-drawer app>
+                <v-list>
+                    <v-list-tile
+                        v-for="(item, i) in portfolio"
+                        :key="i"
+                        @click="current = item.hash"
+                        :class="{ 'primary--text': current === item.hash }"
+                    >
+                        <v-list-tile-action>
+                            <v-icon :color="current === item.hash ? 'primary' : void 0">{{ item.icon }}</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                </v-list>
+            </v-navigation-drawer>
             <v-content>
-                <v-container>Hello world</v-container>
+                <v-container>
+                    <v-card>
+                        <v-card-title class="display-1">
+                            <v-icon large color="primary" class="mr-2">{{ currentItem.icon }}</v-icon>
+                            <div>{{ currentItem.title }}</div>
+                        </v-card-title>
+                        <v-card-text>
+                            <transition name="slide-x-transition" mode="out-in">
+                                <div v-if="current === 'vks'" key="vks">
+                                    Планировщик сеансов видеоконференций.
+                                    Также включает чат, систему мониторинга и административную панель.
+                                    В данном проекте реализовал большую часть фронтенда.
+                                </div>
+                                <div v-if="current === 'musicbox'" key="musicbox">
+                                    Учебный проект: музыкальный сервис с прослушиванием и рекомендациями.
+                                    Реализовал практически весь фронтенд.
+                                </div>
+                                <div v-if="current === 'node-shop'" key="node-shop">
+                                    Учебный проект: интернет-магазин гитар и музыкальных товаров.
+                                    Верстал фронтенд, разрабатывал бэкенд (в него вложено гораздо больше усилий).
+                                    Автоматизировал сборку и развёртывание приложения.
+                                </div>
+                                <div v-if="current === 'asm'" key="asm">
+                                    Вспомогательный проект, разработанный во время обучения программированию микропроцессоров.
+                                    Переводит ассемблерный код в байт-код под архитектуру используемого в обучении процессора,
+                                    а также способен выполнить базовую эмуляцию переведённого кода. Выполнен
+                                    полностью мной.<br>
+                                    <a href="/asm/simple.html" target="_blank" class="primary--text">Открыть</a>
+                                </div>
+                                <div v-if="current === 'mmfp'" key="mmfp">
+                                    Обучающее приложение на базе Electron. Выполнено в рамках курса
+                                    "Математические модели физических процессов". Строит обучение по каждой теме
+                                    из трёх этапов: теоретические сведения, тестирование и практическое моделирование.
+                                    Содержимое первых двух частей любой темы задаётся произвольно. Выполнен полностью мной.
+                                </div>
+                            </transition>
+
+                            <transition-group name="fade-transition" tag="div" mode="out-in">
+                                <v-btn
+                                    key="github"
+                                    v-if="currentItem.repo"
+                                    :href="'https://github.com/' + currentItem.repo"
+                                    target="_blank"
+                                    flat color="primary"
+                                ><v-icon color="primary" left>code</v-icon>GitHub</v-btn>
+                                <v-chip
+                                    v-for="tag in currentItem.tags"
+                                    :key="tag"
+                                    outline label color="primary white--text"
+                                >{{ tag }}</v-chip>
+                            </transition-group>
+
+
+                            <v-carousel v-if="currentItem.images.length" interval="10000" class="elevation-1 ma-2 grey">
+                                <v-carousel-item
+                                    v-for="(img, i) in currentItem.images"
+                                    :key="i"
+                                    :src="'image/' + img"
+                                ></v-carousel-item>
+                            </v-carousel>
+                        </v-card-text>
+                    </v-card>
+                </v-container>
             </v-content>
+
+            <v-footer app class="px-3 justify-end">
+                <div>
+                    &copy; 2018 Никита Иванов
+                </div>
+            </v-footer>
         </v-app>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
-    <script>
-        new Vue({ el: '#app' });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
