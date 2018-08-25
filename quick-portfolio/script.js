@@ -58,7 +58,7 @@ const vm = new Vue({
                     'mmfp',
                     'TITANY/mmfp',
                     ['Electron', 'Vue.js', 'Учебный'],
-                    []
+                    ['mmfp1.png', 'mmfp2.png', 'mmfp3.png', 'mmfp4.png', 'mmfp5.png', 'mmfp6.png']
                 )
             ]
         };
