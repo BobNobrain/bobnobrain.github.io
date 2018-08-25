@@ -44,21 +44,21 @@ const vm = new Vue({
                 ),
 
                 entry(
-                    'Транслятор ASM',
-                    'code',
-                    'asm',
-                    false,
-                    [],
-                    ['io1.png']
-                ),
-
-                entry(
                     'Обучающее приложение',
                     'school',
                     'mmfp',
                     'TITANY/mmfp',
                     ['Electron', 'Vue.js', 'Учебный'],
                     ['mmfp1.png', 'mmfp2.png', 'mmfp3.png', 'mmfp4.png', 'mmfp5.png', 'mmfp6.png']
+                ),
+
+                entry(
+                    'Транслятор ASM',
+                    'code',
+                    'asm',
+                    false,
+                    [],
+                    ['io1.png']
                 )
             ]
         };
