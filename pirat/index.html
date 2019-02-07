@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pirat Translator</title>
+
+    <link
+        rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+        crossorigin="anonymous"
+    >
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container-fluid full-height">
+        <div class="row full-height">
+            <div class="col-sm-6 p-3">
+                <!-- Saved primitives -->
+                <div class="input-group">
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="current_primitive_name"
+                        value="N_CONNECT.CONF"
+                    >
+                    <div class="input-group-append">
+                        <div class="btn-group dropright">
+                            <button
+                                type="button"
+                                class="btn btn-primary dropdown-toggle"
+                                data-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                            >
+                                Saved primitives
+                            </button>
+                            <div class="dropdown-menu" id="saved_primitives">
+                                <a class="dropdown-item" href="#">N_CONNECT.IND</a>
+                                <a class="dropdown-item" href="#">N_DATA.IND</a>
+                                <a class="dropdown-item" href="#">N_DISCONNECT.IND</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <textarea
+                    class="form-control mt-2"
+                    id="input_code"
+                ></textarea>
+            </div>
+            <div class="col-sm-6 p-3">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary">Save</button>
+                    <button type="button" class="btn btn-secondary">Translate</button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-toggle="modal"
+                        data-target="#configure_modal"
+                    >Configure</button>
+                </div>
+
+                <pre id="output_code" class="mt-2">Output will be here...</pre>
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="modal fade"
+        id="configure_modal"
+        tabindex="-1"
+        role="dialog"
+    >
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Output configuration</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="configure_body">
+                    Some JS error occured, sorry
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script
+        src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"
+    ></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"
+    ></script>
+    <script
+        src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"
+    ></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+body, html {
+    width: 100%;
+    height: 100vh;
+    background-color: #333;
+    color: #eee;
+}
+
+.full-height {
+    height: 100%;
+}
+
+#input_code {
+    width: 100%;
+    height: calc(100% - 50px);
+}
+
+textarea.form-control,
+input[type="text"].form-control {
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    background-color: #222 !important;
+    color: #eee !important;
+    border-color: #111;
+}
+
+#output_code {
+    color: #ccc;
+    border: 1px dashed black;
+    padding: 8px;
+    /* max-height: calc(100vh - 50px); */
+    height: calc(100% - 50px);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: #333;
+}
+.modal-header, .modal-footer {
+    border-color: #222;
+}
