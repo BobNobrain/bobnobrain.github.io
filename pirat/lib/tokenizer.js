@@ -121,12 +121,12 @@ class Token {
     }
 
     toString() {
-        return `[Token ${this.type} ("${this.value}")]`;
+        return `[Token<${this.type}> ("${this.value}")]`;
     }
 }
 
 
-export default function findTokens(line, n) {
+export function findTokens(line, n) {
     const m = new Finder(n);
     for (let i = 0; i < line.length; i++) {
         m.process(line[i]);

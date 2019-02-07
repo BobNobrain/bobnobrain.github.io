@@ -1,4 +1,5 @@
-import findTokens from './tokenizer.js';
+import { findTokens } from './tokenizer.js';
+import { parseOperator } from './lang.js';
 
 export default class Parser {
     constructor(code) {
@@ -14,7 +15,6 @@ export default class Parser {
     }
 
     parse() {
-        // TODO
-        this.ast = this.tokens;
+        this.ast = this.tokens.map(parseOperator);
     }
 }
