@@ -11,6 +11,8 @@
         crossorigin="anonymous"
     >
     <link rel="stylesheet" href="style.css">
+
+    <script type="module" src="/pirat/index.js"></script>
 </head>
 <body>
     <div class="container-fluid full-height">
@@ -51,8 +53,16 @@
             </div>
             <div class="col-sm-6 p-3">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary">Save</button>
-                    <button type="button" class="btn btn-secondary">Translate</button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="app.saveCurrentCode()"
+                    >Save</button>
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="app.translate()"
+                    >Translate</button>
                     <button
                         type="button"
                         class="btn btn-secondary"
@@ -84,7 +94,11 @@
                     Some JS error occured, sorry
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary">Save</button>
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        onclick="app.reconfigure()"
+                    >Save</button>
                 </div>
             </div>
         </div>
