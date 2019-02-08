@@ -7,6 +7,7 @@ export const T_NUM = 'number';
 export const T_STR = 'string';
 export const T_SUBST = 'substitution';
 export const T_OP = 'operator';
+export const T_COMMENT = 'comment';
 
 const isSpace = c => c === ' ' || c === '\t' || c === '\r';
 const isLetter = c => /[A-Za-z_.]/.test(c);
@@ -36,11 +37,10 @@ class FinderState extends State {
         }
     }
     process(c) {
-        if (isSpace(c)) return new SInitial();
-
         if (this.fits(c)) {
             this.buffer.push(c);
         } else {
+            if (isSpace(c)) return new SInitial();
             if (this.endChar(c)) {
                 return new SInitial();
             }
@@ -61,8 +61,12 @@ class FinderState extends State {
 }
 
 class SInitial extends FinderState {
+    fits(c) {
+        return isSpace(c);
+    }
     process(c) {
         if (isSpace(c)) return null;
+        if (c === ';') return new SCom(c);
         if (c === '$') return new SSubst(c);
         if (c === '"') return new SStr(c);
         if (isDigit(c)) return new SNumber(c);
@@ -113,6 +117,22 @@ class SOp extends FinderState {
     get type() { return T_OP; }
 }
 
+class SCom extends FinderState {
+    constructor() { super(); }
+    fits(c) { return true; }
+    get type() { return T_COMMENT; }
+}
+
+
+const stringifiers = {
+    [T_ID]: ({ value }) => value,
+    [T_NUM]: ({ value }) => value.toString(),
+    [T_OP]: ({ value }) => value,
+    [T_PRIM]: ({ value }) => value,
+    [T_STR]: ({ value }) => `"${value}"`,
+    [T_SUBST]: ({ value }) => '$' + value,
+    [T_COMMENT]: ({ value }) => ';' + value
+};
 
 class Token {
     constructor({ type, value }) {
@@ -121,7 +141,7 @@ class Token {
     }
 
     toString() {
-        return `[Token<${this.type}> ("${this.value}")]`;
+        return stringifiers[this.type](this);
     }
 }
 
